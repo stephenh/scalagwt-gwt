@@ -99,7 +99,7 @@ public final class CompiledClass implements Serializable {
    *          {@code java/util/Map$Entry}. See
    *          {@link "http://java.sun.com/docs/books/jvms/second_edition/html/ClassFile.doc.html#14757"}
    */
-  CompiledClass(byte[] classBytes, CompiledClass enclosingClass, boolean isLocal,
+  public CompiledClass(byte[] classBytes, CompiledClass enclosingClass, boolean isLocal,
       String internalName) {
     this.enclosingClass = enclosingClass;
     this.internalName = StringInterner.get().intern(internalName);

@@ -115,7 +115,7 @@ public class Shared {
 
   public static String getTypeName(Resource sourceFile) {
     String path = sourceFile.getPath();
-    assert (path.endsWith(".java") || path.endsWith(".jribble"));
+    assert (path.endsWith(".java") || path.endsWith(".scala"));
     path = path.substring(0, path.lastIndexOf('.'));
     return path.replace('/', '.');
   }
@@ -149,7 +149,7 @@ public class Shared {
   }
 
   public static String toInternalName(String path) {
-    assert (path.endsWith(".java") || path.endsWith(".jribble"));
+    assert (path.endsWith(".java") || path.endsWith(".scala"));
     return path.substring(0, path.lastIndexOf('.'));
   }
 
@@ -161,7 +161,7 @@ public class Shared {
    * @return the binary name for {@code path}, e.g. {@code foo.Foo$Bar} for {@code foo/Foo$Bar.java}
    */
   public static String toTypeName(String path) {
-    assert (path.endsWith(".java") || path.endsWith(".jribble"));
+    assert (path.endsWith(".java") || path.endsWith(".scala"));
     path = path.substring(0, path.lastIndexOf('.'));
     return path.replace('/', '.');
   }

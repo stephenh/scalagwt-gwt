@@ -261,6 +261,10 @@ public abstract class CompilationUnitBuilder {
 
   public abstract String getLocation();
 
+  public List<CompiledClass> getCompiledClasses() {
+    return compiledClasses;
+  }
+
   public String getSource() {
     if (source == null) {
       source = doGetSource();

@@ -116,6 +116,7 @@
         <fileset dir="${gwt.root}/scalagwt-lib">
           <include name="jribble_2.9.0-1-0.1-SNAPSHOT.jar"/>
           <include name="scala-library.jar"/>
+          <include name="scala-compiler.jar"/>
         </fileset>
       </sourcefiles>
       <targetfiles>
@@ -181,6 +182,7 @@
           <zipfileset src="${gwt.tools.lib}/guava/guava-r06/guava-r06-rebased-2.jar" />
           <zipfileset src="${gwt.root}/scalagwt-lib/jribble_2.9.0-1-0.1-SNAPSHOT.jar" />
           <zipfileset src="${gwt.root}/scalagwt-lib/scala-library.jar" />
+          <zipfileset src="${gwt.root}/scalagwt-lib/scala-compiler.jar" />
         </gwt.jar>
       </sequential>
     </outofdate>
@@ -220,6 +222,7 @@
       <classpath>
           <pathelement location="${gwt.tools.lib}/apache/ant-1.6.5.jar" />
           <pathelement location="${gwt.tools.lib}/eclipse/jdt-3.4.2.jar" />
+          <pathelement location="${gwt.tools.lib}/apache/commons/commons-io-1.4.jar" />
           <pathelement location="${gwt.tools.lib}/tomcat/commons-collections-3.1.jar" />
           <pathelement location="${gwt.tools.lib}/guava/guava-r06/guava-r06-rebased-2.jar" />
           <fileset dir="${gwt.root}/scalagwt-lib" includes="*.jar"/>

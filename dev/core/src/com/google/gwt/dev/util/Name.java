@@ -80,6 +80,15 @@ public class Name {
         }
         return name.substring(lastSlash + 1);
       }
+
+      public static String getPackageName(String name) {
+        assert isInternalName(name);
+        int lastSlash = name.lastIndexOf('/');
+        if (lastSlash < 0) {
+          return "";
+        }
+        return name.substring(0, lastSlash);
+      }
   
       public static String toBinaryName(String internalName) {
         assert isInternalName(internalName);

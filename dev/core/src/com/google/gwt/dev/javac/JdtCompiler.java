@@ -613,7 +613,7 @@ public class JdtCompiler {
       @Override
       protected void onBinaryTypeRef(BinaryTypeBinding referencedType,
           CompilationUnitDeclaration unitOfReferrer, Expression expression) {
-        if (!Shared.endsWith(referencedType.getFileName(), ".java") && !Shared.endsWith(referencedType.getFileName(), ".jribble")) {
+        if (!Shared.endsWith(referencedType.getFileName(), ".java") && !Shared.endsWith(referencedType.getFileName(), ".scala")) {
           // ignore binary-only annotations
           return;
         }

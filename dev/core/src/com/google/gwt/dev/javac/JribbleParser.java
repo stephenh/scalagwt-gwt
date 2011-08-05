@@ -1,6 +1,5 @@
 package com.google.gwt.dev.javac;
 
-import com.google.gwt.core.ext.TreeLogger;
 import com.google.jribble.DefParser;
 import com.google.jribble.DefParserForJava;
 import com.google.jribble.ast.DeclaredType;
@@ -13,7 +12,7 @@ public class JribbleParser {
 
   private static final DefParser parser = new DefParserForJava();
 
-  public static DeclaredType parse(TreeLogger logger, String typeName, String source) {
+  public static DeclaredType parse(String typeName, String source) {
     Either<DeclaredType, String> result = parser.parse(new StringReader(source), typeName);
     if (result.isRight()) {
       throw new RuntimeException(String.format(

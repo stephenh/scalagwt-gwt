@@ -32,7 +32,7 @@ import java.util.Set;
  * Tracks dependencies from a {@link CompilationUnit} to {@link CompiledClass
  * CompiledClasses}.
  */
-class Dependencies implements Serializable {
+public class Dependencies implements Serializable {
   /**
    * Represents a {@link Ref} that has been previously persisted.
    */
@@ -70,7 +70,7 @@ class Dependencies implements Serializable {
    *
    * {@code myPackage} and {@code apiRefs} should already be interned.
    */
-  static Dependencies buildFromApiRefs(String myPackage, List<String> apiRefs) {
+  public static Dependencies buildFromApiRefs(String myPackage, List<String> apiRefs) {
     List<String> simpleRefs = new ArrayList<String>();
     List<String> qualifiedRefs = new ArrayList<String>();
     for (String apiRef : apiRefs) {
