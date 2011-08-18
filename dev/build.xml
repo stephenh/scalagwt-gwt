@@ -115,8 +115,6 @@
         <fileset file="build.xml"/>
         <fileset dir="${gwt.root}/scalagwt-lib">
           <include name="jribble_2.9.0-1-0.1-SNAPSHOT.jar"/>
-          <include name="scala-library.jar"/>
-          <include name="scala-compiler.jar"/>
         </fileset>
       </sourcefiles>
       <targetfiles>
@@ -181,8 +179,6 @@
           <zipfileset src="${gwt.tools.lib}/sun/swingworker/swing-worker-1.1.jar" />
           <zipfileset src="${gwt.tools.lib}/guava/guava-r06/guava-r06-rebased-2.jar" />
           <zipfileset src="${gwt.root}/scalagwt-lib/jribble_2.9.0-1-0.1-SNAPSHOT.jar" />
-          <zipfileset src="${gwt.root}/scalagwt-lib/scala-library.jar" />
-          <zipfileset src="${gwt.root}/scalagwt-lib/scala-compiler.jar" />
         </gwt.jar>
       </sequential>
     </outofdate>
@@ -235,6 +231,7 @@
       <src path="core/src" />
       <classpath>
         <pathelement location="${alldeps.jar}" />
+        <fileset dir="${gwt.root}/scalagwt-lib" includes="*.jar"/>
       </classpath>
     </gwt.javac>
     <copy todir="${javac.out}">
