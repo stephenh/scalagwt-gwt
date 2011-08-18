@@ -24,7 +24,20 @@ import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
 public class ScalaGwtCompiler implements ExtraCompiler {
 
+  private static final List<String> primitives = new ArrayList<String>();
   private final JribbleAstBuilder jribbleAstBuilder = new JribbleAstBuilder();
+
+  static {
+    primitives.add("scala/Boolean");
+    primitives.add("scala/Byte");
+    primitives.add("scala/Char");
+    primitives.add("scala/Double");
+    primitives.add("scala/Float");
+    primitives.add("scala/Int");
+    primitives.add("scala/Long");
+    primitives.add("scala/Short");
+    primitives.add("scala/Unit");
+  }
 
   /**
    * Remove scala units from {@code builders} and fill in its {@CompilationUnitBuilder} ourselves.
@@ -53,18 +66,6 @@ public class ScalaGwtCompiler implements ExtraCompiler {
       scalac.addScalaSource(BinaryName.toInternalName(scalaUnit.getTypeName()), scalaUnit.getSource());
     }
 
-    // ideally these would not be generated at all
-    List<String> primitives = new ArrayList<String>();
-    primitives.add("scala/Boolean");
-    primitives.add("scala/Byte");
-    primitives.add("scala/Char");
-    primitives.add("scala/Double");
-    primitives.add("scala/Float");
-    primitives.add("scala/Int");
-    primitives.add("scala/Long");
-    primitives.add("scala/Short");
-    primitives.add("scala/Unit");
-
     Map<String, CompilationUnitBuilder> buildersByName = mapByInternalName(scalaBuilders);
     Collection<CompilationUnitBuilder> successfulBuilders = new ArrayList<CompilationUnitBuilder>();
     for (ScalacUnitResult unit : scalac.compile()) {
@@ -74,29 +75,28 @@ public class ScalaGwtCompiler implements ExtraCompiler {
         System.out.println("No builder for " + unit.internalName);
         continue;
       }
-      if (primitives.contains(unit.internalName)) {
-        System.out.println("SKipping " + unit.internalName);
-        continue;
-      }
       List<String> apiRefs = new ArrayList<String>();
       MethodArgNamesLookup methodArgNames = new MethodArgNamesLookup();
       List<CompiledClass> ccs = new ArrayList<CompiledClass>();
       List<JDeclaredType> asts = new ArrayList<JDeclaredType>();
-      for (ScalacClassResult cr : unit.classes) {
-        CompiledClass cc = new CompiledClass(cr.byteCode, null, false, cr.internalName);
-        //TODO(grek): This try...catch is a workaround for following issue: https://github.com/scalagwt/scalagwt-scala/issues/14
-        try {
-          JribbleAstBuilder.Result r = jribbleAstBuilder.process(JribbleParser.parse(cr.internalName, cr.jribble));
-          ccs.add(cc);
-          asts.addAll(r.types);
-          apiRefs.addAll(r.apiRefs);
-          methodArgNames.mergeFrom(r.methodArgNames);
-        } catch (Exception e) {
-          System.out.println("ERROR: " + e.getMessage());
-          e.printStackTrace();
-        } catch (AssertionError ae) {
-          System.out.println("ERROR: " + ae.getMessage());
-          ae.printStackTrace();
+      // the primitive ASTs are broken and empty anyway
+      if (!primitives.contains(unit.internalName)) {
+        for (ScalacClassResult cr : unit.classes) {
+          CompiledClass cc = new CompiledClass(cr.byteCode, null, false, cr.internalName);
+          //TODO(grek): This try...catch is a workaround for following issue: https://github.com/scalagwt/scalagwt-scala/issues/14
+          try {
+            JribbleAstBuilder.Result r = jribbleAstBuilder.process(JribbleParser.parse(cr.internalName, cr.jribble));
+            ccs.add(cc);
+            asts.addAll(r.types);
+            apiRefs.addAll(r.apiRefs);
+            methodArgNames.mergeFrom(r.methodArgNames);
+          } catch (Exception e) {
+            System.out.println("ERROR: " + e.getMessage());
+            e.printStackTrace();
+          } catch (AssertionError ae) {
+            System.out.println("ERROR: " + ae.getMessage());
+            ae.printStackTrace();
+          }
         }
       }
       cub.setTypes(asts);
