@@ -158,7 +158,6 @@ public class NscScalaCompiler implements ScalaCompiler {
     commands.add("-bootclasspath");
     commands.add(bin.getAbsolutePath());
     commands.add("-Xplugin-classes:scala.tools.factorymanifests.FactoryManifestsPlugin");
-    // commands.add("-usejavacp"); // keep?
     return commands;
   }
 
