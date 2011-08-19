@@ -79,24 +79,28 @@ public class ScalaGwtCompiler implements ExtraCompiler {
       MethodArgNamesLookup methodArgNames = new MethodArgNamesLookup();
       List<CompiledClass> ccs = new ArrayList<CompiledClass>();
       List<JDeclaredType> asts = new ArrayList<JDeclaredType>();
-      // the primitive ASTs are broken and empty anyway
-      if (!primitives.contains(unit.internalName)) {
-        for (ScalacClassResult cr : unit.classes) {
+      for (ScalacClassResult cr : unit.classes) {
+        // TODO(stephenh) Remove when RedBlack is fixed, otherwise TypeOracle blows up
+        if (cr.internalName.contains("RedBlack")) {
+          continue;
+        }
+        //TODO(grek): This try...catch is a workaround for following issue: https://github.com/scalagwt/scalagwt-scala/issues/14
+        try {
           CompiledClass cc = new CompiledClass(cr.byteCode, null, false, cr.internalName);
-          //TODO(grek): This try...catch is a workaround for following issue: https://github.com/scalagwt/scalagwt-scala/issues/14
-          try {
+          ccs.add(cc);
+          // the primitive ASTs are broken and empty anyway
+          if (!primitives.contains(unit.internalName)) {
             JribbleAstBuilder.Result r = jribbleAstBuilder.process(JribbleParser.parse(cr.internalName, cr.jribble));
-            ccs.add(cc);
             asts.addAll(r.types);
             apiRefs.addAll(r.apiRefs);
             methodArgNames.mergeFrom(r.methodArgNames);
-          } catch (Exception e) {
-            System.out.println("ERROR: " + e.getMessage());
-            e.printStackTrace();
-          } catch (AssertionError ae) {
-            System.out.println("ERROR: " + ae.getMessage());
-            ae.printStackTrace();
           }
+        } catch (Exception e) {
+          System.out.println("ERROR: " + e.getMessage());
+          e.printStackTrace();
+        } catch (AssertionError ae) {
+          System.out.println("ERROR: " + ae.getMessage());
+          ae.printStackTrace();
         }
       }
       cub.setTypes(asts);
