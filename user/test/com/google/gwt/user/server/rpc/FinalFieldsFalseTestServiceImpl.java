@@ -22,7 +22,7 @@ import com.google.gwt.user.client.rpc.FinalFieldsTestService;
  * The server side implementation of the RPC service.
  *
  */
-public class FinalFieldsTestServiceImpl extends RemoteServiceServlet 
+public class FinalFieldsFalseTestServiceImpl extends RemoteServiceServlet 
   implements FinalFieldsTestService {
   
   @Override

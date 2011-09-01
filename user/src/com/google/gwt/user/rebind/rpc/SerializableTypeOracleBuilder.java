@@ -628,7 +628,7 @@ public class SerializableTypeOracleBuilder {
         logger.branch(Shared.shouldSuppressNonStaticFinalFieldWarnings(logger, context) ?
             TreeLogger.DEBUG : logLevel, "Field '" + field.toString()
             + "' will not be serialized because it is final", null);
-        return false;
+        // return false;
       }
     }
 

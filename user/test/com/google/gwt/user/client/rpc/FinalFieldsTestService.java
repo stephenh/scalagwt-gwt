@@ -56,4 +56,5 @@ public interface FinalFieldsTestService extends RemoteService {
   FinalFieldsNode transferObject(FinalFieldsNode node) 
     throws FinalFieldsException;
   
+  int returnI(FinalFieldsNode node);
 }

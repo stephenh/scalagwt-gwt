@@ -17,7 +17,6 @@
 package com.google.gwt.user.server.rpc;
 
 import com.google.gwt.user.client.rpc.FinalFieldsTestService;
-import com.google.gwt.user.client.rpc.TestSetValidator;
 
 /**
  * The server side implementation of the RPC service.
@@ -26,8 +25,14 @@ import com.google.gwt.user.client.rpc.TestSetValidator;
 public class FinalFieldsTestServiceImplFalseNoWarn extends RemoteServiceServlet 
   implements FinalFieldsTestService {
   
+  @Override
   public FinalFieldsNode transferObject(FinalFieldsNode node) {
     return new FinalFieldsNode(6, "B", 10);
+  }
+
+  @Override
+  public int returnI(FinalFieldsNode node) {
+    return node.i;
   }
 
 }

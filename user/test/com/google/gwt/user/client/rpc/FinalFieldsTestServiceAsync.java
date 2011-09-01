@@ -24,4 +24,5 @@ import com.google.gwt.user.client.rpc.FinalFieldsTestService.FinalFieldsNode;
 public interface FinalFieldsTestServiceAsync {
   void transferObject(FinalFieldsNode node, AsyncCallback<FinalFieldsNode> callback);
 
+  void returnI(FinalFieldsNode node, AsyncCallback<Integer> callback);
 }

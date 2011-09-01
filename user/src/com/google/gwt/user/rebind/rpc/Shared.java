@@ -57,8 +57,6 @@ class Shared {
 
   public static final String RPC_ENHANCED_CLASSES = "rpc.enhancedClasses";
   
-  private static SerializeFinalFieldsOptions serializeFinalFieldsValue;
-
   /**
    * Capitalizes a name.
    * 
@@ -104,12 +102,11 @@ class Shared {
     String serializeFinalFieldsStringValue = getStringProperty(logger,
         context.getPropertyOracle(), RPC_PROP_SERIALIZE_FINAL_FIELDS, "FALSE").toUpperCase();
     try {
-      serializeFinalFieldsValue =
+      return
         SerializeFinalFieldsOptions.valueOf(serializeFinalFieldsStringValue);
     } catch (IllegalArgumentException e) {
       return SerializeFinalFieldsOptions.FALSE;
     }
-    return serializeFinalFieldsValue;
   }
 
   /**
