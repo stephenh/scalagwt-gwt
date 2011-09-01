@@ -384,6 +384,17 @@ public class SerializabilityUtil {
     return (result == instanceType) ? null : result;
   }
 
+  static boolean isNotStaticTransientOrEnum(Field field) {
+    /*
+     * Only serialize fields that are not static or transient (including @GwtTransient).
+     */
+    int fieldModifiers = field.getModifiers();
+    return !Modifier.isStatic(fieldModifiers)
+        && !Modifier.isTransient(fieldModifiers)
+        && !field.isAnnotationPresent(GwtTransient.class)
+        && !field.getDeclaringClass().equals(Enum.class);
+  }
+
   /**
    * Returns the server-side {@link Class} which can serialize the given
    * instance type, or <code>null</code> if this class has no type-checking
@@ -498,8 +509,7 @@ public class SerializabilityUtil {
 
   static boolean isNotStaticTransientOrFinal(Field field) {
     /*
-     * Only serialize fields that are not static, transient (including
-     * @GwtTransient), or final.
+     * Only serialize fields that are not static or transient (including @GwtTransient).
      */
     int fieldModifiers = field.getModifiers();
     return !Modifier.isStatic(fieldModifiers) && !Modifier.isTransient(fieldModifiers)
@@ -624,13 +634,13 @@ public class SerializabilityUtil {
        * necessitate a change to our JRE emulation's version of Throwable.
        */
       if ("detailMessage".equals(field.getName())) {
-        assert (isNotStaticTransientOrFinal(field));
+        assert (isNotStaticTransientOrEnum(field));
         return true;
       } else {
         return false;
       }
     } else {
-      return isNotStaticTransientOrFinal(field);
+      return isNotStaticTransientOrEnum(field);
     }
   }
 

@@ -16,6 +16,7 @@
 package com.google.gwt.user.rebind.rpc;
 
 import com.google.gwt.core.ext.StubGeneratorContext;
+import com.google.gwt.core.ext.PropertyOracle;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JArrayType;
@@ -69,9 +70,15 @@ public class SerializableTypeOracleBuilderTest extends TestCase {
    */
   static class MockContext extends StubGeneratorContext {
     private TypeOracle typeOracle;
+    private PropertyOracle propertyOracle;
 
     MockContext(TypeOracle typeOracle) {
       this.typeOracle = typeOracle;
+    }
+
+    MockContext(TypeOracle typeOracle, PropertyOracle propertyOracle) {
+      this.typeOracle = typeOracle;
+      this.propertyOracle = propertyOracle;
     }
 
     @Override
@@ -79,6 +86,11 @@ public class SerializableTypeOracleBuilderTest extends TestCase {
       return typeOracle;
     }
 
+    @Override
+    public PropertyOracle getPropertyOracle() {
+      return propertyOracle;
+    }
+    
     @Override
     public boolean isProdMode() {
       return true;
@@ -200,7 +212,7 @@ public class SerializableTypeOracleBuilderTest extends TestCase {
     StaticPropertyOracle propertyOracle =
         new StaticPropertyOracle(new BindingProperty[0], new String[0],
             new ConfigurationProperty[0]);
-    return new SerializableTypeOracleBuilder(logger, propertyOracle, new MockContext(to));
+    return new SerializableTypeOracleBuilder(logger, new MockContext(to, propertyOracle));
   }
 
   private static TypeInfo[] getActualTypeInfo(SerializableTypeOracle sto) {

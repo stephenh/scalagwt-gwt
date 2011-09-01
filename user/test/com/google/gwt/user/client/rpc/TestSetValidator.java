@@ -31,6 +31,7 @@ import com.google.gwt.user.client.rpc.TestSetFactory.SerializableGraphWithCFS;
 import com.google.gwt.user.client.rpc.TestSetFactory.SerializablePrivateNoArg;
 import com.google.gwt.user.client.rpc.TestSetFactory.SerializableWithTwoArrays;
 import com.google.gwt.user.client.rpc.RecursiveClassTestService.ResultNode;
+import com.google.gwt.user.client.rpc.FinalFieldsTestService.FinalFieldsNode;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
@@ -748,6 +749,21 @@ public class TestSetValidator {
     assertFalse(result == child);
     assertSame(result, child.getParent());
     return true;
+  }
+  
+  public static boolean isValidFinalFieldsObjectDefault(FinalFieldsNode result) {
+    return result != null && result.i == 5
+      && result.str.equals("A") && result.f.length == 3;
+  }
+  
+  public static boolean isValidFinalFieldsObjectFromServer(FinalFieldsNode result) {
+    return result != null && result.i == 6
+      && result.str.equals("B") && result.f.length == 10;
+  }
+  
+  public static boolean isValidFinalFieldsObjectFromClient(FinalFieldsNode result) {
+    return result != null && result.i == 4 
+      && result.str.equals("C") && result.f.length == 9;
   }
   
   public static boolean isValidRecurisveClassObject(ResultNode<? extends ResultNode<?>> result) {

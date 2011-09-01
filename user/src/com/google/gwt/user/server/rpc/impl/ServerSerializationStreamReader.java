@@ -785,7 +785,9 @@ public final class ServerSerializationStreamReader extends AbstractSerialization
         setter.invoke(instance, value);
       } else {
         boolean isAccessible = declField.isAccessible();
-        boolean needsAccessOverride = !isAccessible && !Modifier.isPublic(declField.getModifiers());
+        boolean needsAccessOverride = (!isAccessible
+            && !Modifier.isPublic(declField.getModifiers()))
+            || Modifier.isFinal(declField.getModifiers());
         if (needsAccessOverride) {
           // Override access restrictions
           declField.setAccessible(true);
@@ -977,9 +979,8 @@ public final class ServerSerializationStreamReader extends AbstractSerialization
         // Iterate over each field and locate a suitable setter method
         Field[] fields = instanceClass.getDeclaredFields();
         for (Field field : fields) {
-          // Consider non-final, non-static, non-transient (or @GwtTransient)
-          // fields only
-          if (SerializabilityUtil.isNotStaticTransientOrFinal(field)) {
+          // Consider non-enum, non-static, non-transient (or @GwtTransient) fields only
+          if (SerializabilityUtil.isNotStaticTransientOrEnum(field)) {
             String fieldName = field.getName();
             String setterName =
                 "set" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);

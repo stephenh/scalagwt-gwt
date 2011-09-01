@@ -30,11 +30,23 @@
 	-->
 	<set-property name="gwt.suppressNonStaticFinalFieldWarnings" value="false" />
 
-    <!--
-        If this is ever turned on by default, fix up RPCSuiteWithElision 
-    -->
-    <define-configuration-property name="gwt.elideTypeNamesFromRPC" is-multi-valued="false" />
-    <set-configuration-property name="gwt.elideTypeNamesFromRPC" value="false" />
+  <!--
+    Declare a property to determine whether final fields should be serialized
+    in rpc, and if not, whether warnings should be generated
+    if false-nowarn is set, it supersedes gwt.suppressNonStaticFinalFieldWarning s
+  -->
+  <define-property name="rpc.final.serialize" values="false,false_nowarn,true" />
+  
+  <!--
+    Default value for rpc serialization on final fields.
+  -->
+  <set-property name="rpc.final.serialize" value="false" />
+
+  <!--
+    If this is ever turned on by default, fix up RPCSuiteWithElision 
+  -->
+  <define-configuration-property name="gwt.elideTypeNamesFromRPC" is-multi-valued="false" />
+  <set-configuration-property name="gwt.elideTypeNamesFromRPC" value="false" />
     
   <!--
       Contains regular expressions, optionally prefixed with '+' or '-'.

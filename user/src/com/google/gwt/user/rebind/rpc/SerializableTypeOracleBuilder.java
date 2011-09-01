@@ -34,6 +34,7 @@ import com.google.gwt.dev.util.log.PrintWriterTreeLogger;
 import com.google.gwt.user.client.rpc.GwtTransient;
 import com.google.gwt.user.client.rpc.IsSerializable;
 import com.google.gwt.user.rebind.rpc.ProblemReport.Priority;
+import com.google.gwt.user.rebind.rpc.Shared.SerializeFinalFieldsOptions;
 import com.google.gwt.user.rebind.rpc.TypeParameterExposureComputer.TypeParameterFlowInfo;
 import com.google.gwt.user.rebind.rpc.TypePaths.TypePath;
 
@@ -602,7 +603,7 @@ public class SerializableTypeOracleBuilder {
    * considering its type.
    */
   static boolean shouldConsiderForSerialization(TreeLogger logger,
-      boolean suppressNonStaticFinalFieldWarnings, JField field) {
+      GeneratorContext context, JField field) {
     if (field.isStatic() || field.isTransient()) {
       return false;
     }
@@ -611,20 +612,24 @@ public class SerializableTypeOracleBuilder {
       return false;
     }
 
-    if (field.isFinal()) {
-      TreeLogger.Type logLevel;
-      if (isManuallySerializable(field.getEnclosingType())) {
-        /*
-         * If the type has a custom serializer, assume the programmer knows
-         * best.
-         */
-        logLevel = TreeLogger.DEBUG;
-      } else {
-        logLevel = TreeLogger.WARN;
+    if (field.isFinal()) { 
+      if (Shared.shouldSerializeFinalFields(logger, context)
+          == Shared.SerializeFinalFieldsOptions.FALSE) {
+        TreeLogger.Type logLevel;
+        if (isManuallySerializable(field.getEnclosingType())) {
+          /*
+           * If the type has a custom seriaherelizer, assume the programmer knows
+           * best.
+           */
+          logLevel = TreeLogger.DEBUG;
+        } else {
+          logLevel = TreeLogger.WARN;
+        }
+        logger.branch(Shared.shouldSuppressNonStaticFinalFieldWarnings(logger, context) ?
+            TreeLogger.DEBUG : logLevel, "Field '" + field.toString()
+            + "' will not be serialized because it is final", null);
+        return false;
       }
-      logger.branch(suppressNonStaticFinalFieldWarnings ? TreeLogger.DEBUG : logLevel, "Field '"
-          + field.toString() + "' will not be serialized because it is final", null);
-      return false;
     }
 
     return true;
@@ -717,8 +722,7 @@ public class SerializableTypeOracleBuilder {
             + " serializable type" + ((fieldSerializableTypes.size() == 1) ? "" : "s"), null);
 
     for (JClassType fieldSerializableType : fieldSerializableTypes) {
-      localLogger.branch(TreeLogger.DEBUG, fieldSerializableType
-          .getParameterizedQualifiedSourceName(), null);
+      localLogger.branch(TreeLogger.DEBUG, fieldSerializableType.getParameterizedQualifiedSourceName(), null);
     }
   }
 
@@ -742,19 +746,12 @@ public class SerializableTypeOracleBuilder {
 
   private final Map<JClassType, TreeLogger> rootTypes = new LinkedHashMap<JClassType, TreeLogger>();
 
-  /**
-   * If <code>true</code> we will not warn if a serializable type contains a
-   * non-static final field. We warn because these fields are not serialized.
-   */
-  private final boolean suppressNonStaticFinalFieldWarnings;
-
   private final TypeConstrainer typeConstrainer;
   private TypeFilter typeFilter = DEFAULT_TYPE_FILTER;
 
   private final TypeOracle typeOracle;
 
-  private final TypeParameterExposureComputer typeParameterExposureComputer =
-      new TypeParameterExposureComputer(typeFilter);
+  private final TypeParameterExposureComputer typeParameterExposureComputer;
 
   /**
    * The set of type parameters that appear in one of the root types.
@@ -774,16 +771,16 @@ public class SerializableTypeOracleBuilder {
    * Constructs a builder.
    * 
    * @param logger
-   * @param propertyOracle
    * @param context
    * 
    * @throws UnableToCompleteException if we fail to find one of our special
    *           types
    */
-  public SerializableTypeOracleBuilder(TreeLogger logger, PropertyOracle propertyOracle,
-      GeneratorContext context) throws UnableToCompleteException {
+  public SerializableTypeOracleBuilder(TreeLogger logger, GeneratorContext context)
+      throws UnableToCompleteException {
     this.context = context;
     this.typeOracle = context.getTypeOracle();
+    this.typeParameterExposureComputer = new TypeParameterExposureComputer(context, typeFilter);
     typeConstrainer = new TypeConstrainer(typeOracle);
 
     try {
@@ -794,9 +791,7 @@ public class SerializableTypeOracleBuilder {
       throw new UnableToCompleteException();
     }
 
-    suppressNonStaticFinalFieldWarnings =
-        Shared.shouldSuppressNonStaticFinalFieldWarnings(logger, propertyOracle);
-    enhancedClasses = Shared.getEnhancedTypes(propertyOracle);
+    enhancedClasses = Shared.getEnhancedTypes(context.getPropertyOracle());
   }
 
   public void addRootType(TreeLogger logger, JType type) {
@@ -956,8 +951,8 @@ public class SerializableTypeOracleBuilder {
     JTypeParameter isTypeParameter = classType.isTypeParameter();
     if (isTypeParameter != null) {
       if (typeParametersInRootTypes.contains(isTypeParameter)) {
-        return computeTypeInstantiability(localLogger, isTypeParameter.getFirstBound(), TypePaths
-            .createTypeParameterInRootPath(path, isTypeParameter), problems);
+        return computeTypeInstantiability(localLogger, isTypeParameter.getFirstBound(),
+            TypePaths.createTypeParameterInRootPath(path, isTypeParameter), problems);
       }
 
       /*
@@ -976,8 +971,7 @@ public class SerializableTypeOracleBuilder {
       boolean success = true;
       for (JClassType bound : isWildcard.getUpperBounds()) {
         success &=
-            computeTypeInstantiability(localLogger, bound, path, problems)
-                .hasInstantiableSubtypes();
+            computeTypeInstantiability(localLogger, bound, path, problems).hasInstantiableSubtypes();
       }
       tic = getTypeInfoComputed(classType, path, true);
       tic.setInstantiableSubtypes(success);
@@ -1006,8 +1000,7 @@ public class SerializableTypeOracleBuilder {
     }
 
     if (classType.isRawType() != null) {
-      localLogger
-          .log(
+      localLogger.log(
               TreeLogger.DEBUG,
               "Type '"
                   + classType.getQualifiedSourceName()
@@ -1112,8 +1105,7 @@ public class SerializableTypeOracleBuilder {
     TreeLogger branch = logger.branch(TreeLogger.DEBUG, "Analyzing component type:", null);
 
     TypeInfoComputed leafTic =
-        computeTypeInstantiability(branch, leafType, TypePaths
-            .createArrayComponentPath(array, path), problems);
+        computeTypeInstantiability(branch, leafType, TypePaths.createArrayComponentPath(array, path), problems);
     boolean succeeded = leafTic.hasInstantiableSubtypes();
     if (succeeded) {
       if (leafClass == null) {
@@ -1173,7 +1165,7 @@ public class SerializableTypeOracleBuilder {
               + "' that qualify for serialization", null);
 
       for (JField field : fields) {
-        if (!shouldConsiderForSerialization(localLogger, suppressNonStaticFinalFieldWarnings, field)) {
+        if (!shouldConsiderForSerialization(localLogger, context, field)) {
           continue;
         }
 
@@ -1187,8 +1179,7 @@ public class SerializableTypeOracleBuilder {
               "Object was reached from a manually serializable type", null), path, problems);
         } else {
           allSucceeded &=
-              computeTypeInstantiability(fieldLogger, fieldType, path, problems)
-                  .hasInstantiableSubtypes();
+              computeTypeInstantiability(fieldLogger, fieldType, path, problems).hasInstantiableSubtypes();
         }
       }
     }
@@ -1306,8 +1297,7 @@ public class SerializableTypeOracleBuilder {
       tic.setPendingInstantiable();
 
       TreeLogger subtypeLogger =
-          verificationLogger.branch(TreeLogger.DEBUG, candidate
-              .getParameterizedQualifiedSourceName());
+          verificationLogger.branch(TreeLogger.DEBUG, candidate.getParameterizedQualifiedSourceName());
       boolean instantiable =
           checkSubtype(subtypeLogger, candidate, originalType, subtypePath, problems);
       anySubtypes |= instantiable;
@@ -1384,8 +1374,7 @@ public class SerializableTypeOracleBuilder {
             logger.branch(TreeLogger.DEBUG, "Checking type argument " + paramIndex + " of type '"
                 + baseType.getParameterizedQualifiedSourceName()
                 + "' because it is directly exposed in this type or in one of its subtypes");
-        return computeTypeInstantiability(branch, typeArg, path, problems)
-            .hasInstantiableSubtypes()
+        return computeTypeInstantiability(branch, typeArg, path, problems).hasInstantiableSubtypes()
             || mightNotBeExposed(baseType, paramIndex);
       }
       case TypeParameterExposureComputer.EXPOSURE_NONE:

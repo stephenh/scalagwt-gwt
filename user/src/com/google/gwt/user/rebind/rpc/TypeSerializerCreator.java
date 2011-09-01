@@ -267,7 +267,7 @@ public class TypeSerializerCreator {
 
       // generate a new field serializer
       FieldSerializerCreator creator =
-          new FieldSerializerCreator(context, serializationOracle, deserializationOracle,
+          new FieldSerializerCreator(logger, context, serializationOracle, deserializationOracle,
               (JClassType) type, customFieldSerializer);
       creator.realize(logger, ctx);
     } finally {
@@ -387,7 +387,7 @@ public class TypeSerializerCreator {
   private String getTypeString(JType type) {
     String typeString =
         SerializationUtils.getRpcTypeName(type) + "/"
-            + SerializationUtils.getSerializationSignature(typeOracle, type);
+            + SerializationUtils.getSerializationSignature(context, type);
     return typeString;
   }
 

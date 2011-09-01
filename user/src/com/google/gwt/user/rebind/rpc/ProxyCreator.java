@@ -288,10 +288,10 @@ public class ProxyCreator {
     String rpcLog;
     try {
       SerializableTypeOracleBuilder typesSentFromBrowserBuilder =
-          new SerializableTypeOracleBuilder(logger, propertyOracle, context);
+          new SerializableTypeOracleBuilder(logger, context);
       typesSentFromBrowserBuilder.setTypeFilter(blacklistTypeFilter);
       SerializableTypeOracleBuilder typesSentToBrowserBuilder =
-          new SerializableTypeOracleBuilder(logger, propertyOracle, context);
+          new SerializableTypeOracleBuilder(logger, context);
       typesSentToBrowserBuilder.setTypeFilter(blacklistTypeFilter);
 
       addRoots(logger, typeOracle, typesSentFromBrowserBuilder, typesSentToBrowserBuilder);
@@ -760,7 +760,7 @@ public class ProxyCreator {
          * Include the serialization signature to bump the RPC file name if
          * obfuscated identifiers are used.
          */
-        pw.print(", " + SerializationUtils.getSerializationSignature(oracle, type));
+        pw.print(", " + SerializationUtils.getSerializationSignature(ctx, type));
         pw.print('\n');
 
         /*

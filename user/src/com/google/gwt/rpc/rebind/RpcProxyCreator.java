@@ -136,7 +136,7 @@ public class RpcProxyCreator extends ProxyCreator {
     Map<JType, JMethod> serializerMethods = new LinkedHashMap<JType, JMethod>();
     Map<JType, List<String>> fields = new LinkedHashMap<JType, List<String>>();
 
-    StringBuilder sb = writeArtificialRescues(typeOracle, serializationSto,
+    StringBuilder sb = writeArtificialRescues(ctx, serializationSto,
         deserializationSto);
 
     ClassSourceFileComposerFactory composerFactory = new ClassSourceFileComposerFactory(
@@ -181,7 +181,7 @@ public class RpcProxyCreator extends ProxyCreator {
         }
 
         JField[] serializableFields = SerializationUtils.getSerializableFields(
-            typeOracle, classType);
+            ctx, classType);
         allFieldsAreSerializable &= serializableFields.length == classType.getFields().length;
         for (JField field : serializableFields) {
           fieldRefs.add("@" + field.getEnclosingType().getQualifiedSourceName()
@@ -284,7 +284,7 @@ public class RpcProxyCreator extends ProxyCreator {
       }
 
       JField[] serializableFields = SerializationUtils.getSerializableFields(
-          ctx.getTypeOracle(), (JClassType) type);
+          ctx, (JClassType) type);
 
       List<String> names = Lists.create();
       for (int i = 0, j = serializableFields.length; i < j; i++) {
@@ -299,7 +299,7 @@ public class RpcProxyCreator extends ProxyCreator {
     return RpcLogArtifact.UNSPECIFIED_STRONGNAME;
   }
 
-  private StringBuilder writeArtificialRescues(TypeOracle typeOracle,
+  private StringBuilder writeArtificialRescues(GeneratorContext context,
       SerializableTypeOracle serializationSto,
       SerializableTypeOracle deserializationSto) {
     Set<JType> serializableTypes = new LinkedHashSet<JType>();
@@ -326,12 +326,13 @@ public class RpcProxyCreator extends ProxyCreator {
         sb.append(serializableArray.getQualifiedSourceName());
         sb.append("\",\n instantiable = true),");
       } else if (serializableClass != null) {
-        writeSingleRescue(typeOracle, deserializationSto, sb, serializableClass);
+        writeSingleRescue(context, deserializationSto, sb, serializableClass);
       } else if (serializablePrimitive != null) {
-        JClassType boxedClass = typeOracle.findType(serializablePrimitive.getQualifiedBoxedSourceName());
+        JClassType boxedClass = context.getTypeOracle().findType(
+            serializablePrimitive.getQualifiedBoxedSourceName());
         assert boxedClass != null : "No boxed version of "
             + serializablePrimitive.getQualifiedSourceName();
-        writeSingleRescue(typeOracle, deserializationSto, sb, boxedClass);
+        writeSingleRescue(context, deserializationSto, sb, boxedClass);
       }
     }
     sb.append("})");
@@ -342,7 +343,7 @@ public class RpcProxyCreator extends ProxyCreator {
    * Writes the rescue of a serializable type and its custom serialization
    * logic.
    */
-  private void writeSingleRescue(TypeOracle typeOracle,
+  private void writeSingleRescue(GeneratorContext context,
       SerializableTypeOracle deserializationOracle, StringBuilder sb,
       JClassType serializableClass) {
     boolean shouldDeserialize = deserializationOracle.isSerializable(serializableClass);
@@ -359,7 +360,7 @@ public class RpcProxyCreator extends ProxyCreator {
       JClassType search = serializableClass;
       do {
         customSerializer = SerializableTypeOracleBuilder.findCustomFieldSerializer(
-            typeOracle, search);
+            context.getTypeOracle(), search);
 
         if (customSerializer != null) {
           instantiate = CustomFieldSerializerValidator.getInstantiationMethod(
@@ -382,7 +383,7 @@ public class RpcProxyCreator extends ProxyCreator {
     if (enumType != null) {
       serializableFields = enumType.getFields();
     } else {
-      serializableFields = SerializationUtils.getSerializableFields(typeOracle,
+      serializableFields = SerializationUtils.getSerializableFields(context,
           serializableClass);
     }
 

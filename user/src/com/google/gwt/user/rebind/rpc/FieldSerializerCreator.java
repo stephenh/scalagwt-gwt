@@ -62,6 +62,9 @@ public class FieldSerializerCreator {
 
   private static final String WEAK_MAPPING_CLASS_NAME = WeakMapping.class.getName();
 
+
+  private final TreeLogger logger;
+
   private final GeneratorContext context;
 
   private final JClassType customFieldSerializer;
@@ -93,9 +96,10 @@ public class FieldSerializerCreator {
   /**
    * Constructs a field serializer for the class.
    */
-  public FieldSerializerCreator(GeneratorContext context,
+  public FieldSerializerCreator(TreeLogger logger, GeneratorContext context,
       SerializableTypeOracle typesSentFromBrowser, SerializableTypeOracle typesSentToBrowser,
       JClassType requestedClass, JClassType customFieldSerializer) {
+    this.logger = logger;
     this.context = context;
     this.isProd = context.isProdMode();
     methodStart = isProd ? "/*-{" : "{";
@@ -108,11 +112,10 @@ public class FieldSerializerCreator {
     this.typesSentFromBrowser = typesSentFromBrowser;
     this.typesSentToBrowser = typesSentToBrowser;
     serializableClass = requestedClass;
-    serializableFields = SerializationUtils.getSerializableFields(typeOracle, requestedClass);
+    serializableFields = SerializationUtils.getSerializableFields(context, requestedClass);
     this.fieldSerializerName = SerializationUtils.getStandardSerializerName(serializableClass);
-    this.isJRE =
-        SerializableTypeOracleBuilder.isInStandardJavaPackage(serializableClass
-            .getQualifiedSourceName());
+    this.isJRE = SerializableTypeOracleBuilder.isInStandardJavaPackage(
+            serializableClass.getQualifiedSourceName());
     this.customFieldSerializerHasInstantiate =
         (customFieldSerializer != null && CustomFieldSerializerValidator.hasInstantiationMethod(
             customFieldSerializer, serializableClass));
@@ -120,8 +123,8 @@ public class FieldSerializerCreator {
 
   public String realize(TreeLogger logger, GeneratorContext ctx) {
     assert (ctx != null);
-    assert (typesSentFromBrowser.isSerializable(serializableClass) || typesSentToBrowser
-        .isSerializable(serializableClass));
+    assert (typesSentFromBrowser.isSerializable(serializableClass) ||
+        typesSentToBrowser.isSerializable(serializableClass));
 
     logger =
         logger.branch(TreeLogger.DEBUG, "Generating a field serializer for type '"
@@ -331,9 +334,9 @@ public class FieldSerializerCreator {
     sourceWriter.print("public static" + (useViolator ? " native " : " "));
     String qualifiedSourceName = serializableClass.getQualifiedSourceName();
     sourceWriter.print(qualifiedSourceName);
-    sourceWriter
-        .println(" instantiate(SerializationStreamReader streamReader) throws SerializationException "
-            + (useViolator ? "/*-{" : "{"));
+    sourceWriter.println(
+        " instantiate(SerializationStreamReader streamReader) throws SerializationException "
+        + (useViolator ? "/*-{" : "{"));
     sourceWriter.indent();
 
     if (isArray != null) {
@@ -389,8 +392,8 @@ public class FieldSerializerCreator {
     }
 
     // Create method
-    sourceWriter
-        .println("public Object create(SerializationStreamReader reader) throws SerializationException {");
+    sourceWriter.println(
+        "public Object create(SerializationStreamReader reader) throws SerializationException {");
     sourceWriter.indent();
     if (serializableClass.isEnum() != null || serializableClass.isDefaultInstantiable()
         || customFieldSerializerHasInstantiate) {
@@ -416,8 +419,8 @@ public class FieldSerializerCreator {
     sourceWriter.println();
 
     // Deserial method
-    sourceWriter
-        .println("public void deserial(SerializationStreamReader reader, Object object) throws SerializationException {");
+    sourceWriter.println(
+        "public void deserial(SerializationStreamReader reader, Object object) throws SerializationException {");
     if (customFieldSerializer != null) {
       JMethod deserializationMethod =
           CustomFieldSerializerValidator.getDeserializationMethod(customFieldSerializer,
@@ -434,8 +437,8 @@ public class FieldSerializerCreator {
     sourceWriter.println();
 
     // Serial method
-    sourceWriter
-        .println("public void serial(SerializationStreamWriter writer, Object object) throws SerializationException {");
+    sourceWriter.println(
+        "public void serial(SerializationStreamWriter writer, Object object) throws SerializationException {");
     if (customFieldSerializer != null) {
       JMethod serializationMethod =
           CustomFieldSerializerValidator.getSerializationMethod(customFieldSerializer,
@@ -464,10 +467,18 @@ public class FieldSerializerCreator {
      * class that they serialize. This enables the serializer class to access
      * all fields except those that are private.
      * 
+     * Note: If the fields are final, they need accessors too, regardless the 
+     * access level
+     * 
      * Java Access Levels: default - package private - class only protected -
      * package and all subclasses public - all
      */
-    return field.isPrivate();
+    if (Shared.shouldSerializeFinalFields(logger, context)
+          == Shared.SerializeFinalFieldsOptions.TRUE) {
+      return field.isPrivate() || field.isFinal();
+    } else {
+      return field.isPrivate();
+    }
   }
 
   /**
@@ -538,7 +549,12 @@ public class FieldSerializerCreator {
             "(" + fieldType.getQualifiedSourceName() + ") " + streamReadExpression;
       }
 
-      if (needsAccessorMethods(serializableField)) {
+      if (serializableField.isFinal()
+          && Shared.shouldSerializeFinalFields(logger, context)
+            != Shared.SerializeFinalFieldsOptions.TRUE) {
+        // if not serializing final fields ("false"/"false_nowarn")
+        // skip source writing
+      } else if (needsAccessorMethods(serializableField)) {
         sourceWriter.print("set");
         sourceWriter.print(Shared.capitalize(serializableField.getName()));
         sourceWriter.print("(instance, ");
@@ -557,8 +573,8 @@ public class FieldSerializerCreator {
 
     JClassType superClass = serializableClass.getSuperclass();
     if (superClass != null
-        && (typesSentFromBrowser.isSerializable(superClass) || typesSentToBrowser
-            .isSerializable(superClass))) {
+        && (typesSentFromBrowser.isSerializable(superClass) ||
+            typesSentToBrowser.isSerializable(superClass))) {
       String superFieldSerializer =
           SerializationUtils.getFieldSerializerName(typeOracle, superClass);
       sourceWriter.print(superFieldSerializer);
@@ -601,8 +617,8 @@ public class FieldSerializerCreator {
 
     JClassType superClass = serializableClass.getSuperclass();
     if (superClass != null
-        && (typesSentFromBrowser.isSerializable(superClass) || typesSentToBrowser
-            .isSerializable(superClass))) {
+        && (typesSentFromBrowser.isSerializable(superClass) ||
+            typesSentToBrowser.isSerializable(superClass))) {
       String superFieldSerializer =
           SerializationUtils.getFieldSerializerName(typeOracle, superClass);
       sourceWriter.print(superFieldSerializer);
