@@ -148,6 +148,7 @@ public class CompilationStateBuilder {
 
     private final GwtAstBuilder astBuilder = new GwtAstBuilder();
 
+    // TODO(stephenh) Do not hard-code to ScalaGwtCompiler
     private final ExtraCompiler extraCompiler = new ScalaGwtCompiler();
 
     private transient LinkedBlockingQueue<CompilationUnitBuilder> buildQueue;
@@ -223,8 +224,8 @@ public class CompilationStateBuilder {
         buildThread.setName("CompilationUnitBuilder");
         buildThread.start();
 
-        Collection<CompilationUnitBuilder> otherBuilders = extraCompiler.stealUnits(logger, builders, cachedUnits.values());
-        for (CompilationUnitBuilder cub : otherBuilders) {
+        Collection<CompilationUnitBuilder> nonJavaBuilders = extraCompiler.stealUnits(logger, builders, cachedUnits.values());
+        for (CompilationUnitBuilder cub : nonJavaBuilders) {
           for (CompiledClass cc : cub.getCompiledClasses()) {
             // allValidClasses is maintained by the JDT UnitProcessorImpl, which we don't hit, so update it here
             allValidClasses.put(cc.getInternalName(), cc);

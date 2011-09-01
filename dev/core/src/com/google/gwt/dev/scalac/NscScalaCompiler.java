@@ -19,9 +19,9 @@ import scala.runtime.AbstractFunction1;
 import scala.runtime.BoxedUnit;
 import scala.tools.nsc.CompilerCommand;
 import scala.tools.nsc.Global;
-import scala.tools.nsc.Global.Run;
 import scala.tools.nsc.Settings;
 
+/** Implements the {@link ScalaCompiler} API by calling nsc in-process. */
 public class NscScalaCompiler implements ScalaCompiler {
   
   // TODO(stephenh) Think about binary-only annotations, ecj loads them on demand, do we need to?
@@ -34,6 +34,7 @@ public class NscScalaCompiler implements ScalaCompiler {
     }
   };
   
+  // TODO(stephenh) Use java.io.tmpdir + per-instance tmpdir?
   private final File tmp = new File("/tmp/gwt-scalac");
   private final File source = new File(tmp, "source");
   private final File target = new File(tmp, "target");
@@ -117,7 +118,6 @@ public class NscScalaCompiler implements ScalaCompiler {
 
     System.out.println("Compiling jribble");
     invokeNsc(makeArgs("jribble"));
-
 
     Map<String, ScalacUnitResult> byUnitName = new HashMap<String, ScalacUnitResult>();
     String targetPath = target.getAbsolutePath();

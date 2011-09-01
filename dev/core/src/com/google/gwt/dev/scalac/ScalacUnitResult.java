@@ -3,6 +3,7 @@ package com.google.gwt.dev.scalac;
 import java.util.ArrayList;
 import java.util.List;
 
+/** A dto for compiled scala units. */
 public class ScalacUnitResult {
 
   public final String internalName;

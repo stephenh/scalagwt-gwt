@@ -1,12 +1,5 @@
 package com.google.gwt.dev.scalac;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.dev.javac.CompilationUnit;
 import com.google.gwt.dev.javac.CompilationUnitBuilder;
@@ -22,6 +15,16 @@ import com.google.gwt.dev.util.Name.BinaryName;
 import com.google.gwt.dev.util.Name.InternalName;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
+/** Implements the {@link ExtraCompiler} hook to compile Scala files within GWT. */
 public class ScalaGwtCompiler implements ExtraCompiler {
 
   private static final List<String> primitives = new ArrayList<String>();
