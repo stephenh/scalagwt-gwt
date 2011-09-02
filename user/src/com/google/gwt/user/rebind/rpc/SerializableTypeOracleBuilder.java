@@ -16,7 +16,6 @@
 package com.google.gwt.user.rebind.rpc;
 
 import com.google.gwt.core.ext.GeneratorContext;
-import com.google.gwt.core.ext.PropertyOracle;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JArrayType;
@@ -599,40 +598,42 @@ public class SerializableTypeOracleBuilder {
   }
 
   /**
-   * Returns <code>true</code> if the field qualifies for serialization without
-   * considering its type.
+   * Returns <code>true</code> if the field qualifies for serialization without considering its
+   * type.
    */
-  static boolean shouldConsiderForSerialization(TreeLogger logger,
-      GeneratorContext context, JField field) {
-    if (field.isStatic() || field.isTransient()) {
+  static boolean shouldConsiderForSerialization(TreeLogger logger, GeneratorContext context,
+      JField field) {
+    if (field.isStatic() || field.isTransient() || field.isAnnotationPresent(GwtTransient.class)) {
       return false;
     }
-
-    if (field.isAnnotationPresent(GwtTransient.class)) {
-      return false;
-    }
-
-    if (field.isFinal()) { 
-      if (Shared.shouldSerializeFinalFields(logger, context)
-          == Shared.SerializeFinalFieldsOptions.FALSE) {
-        TreeLogger.Type logLevel;
-        if (isManuallySerializable(field.getEnclosingType())) {
-          /*
-           * If the type has a custom seriaherelizer, assume the programmer knows
-           * best.
-           */
-          logLevel = TreeLogger.DEBUG;
-        } else {
-          logLevel = TreeLogger.WARN;
-        }
-        logger.branch(Shared.shouldSuppressNonStaticFinalFieldWarnings(logger, context) ?
-            TreeLogger.DEBUG : logLevel, "Field '" + field.toString()
-            + "' will not be serialized because it is final", null);
-        // return false;
+    if (field.isFinal()) {
+      SerializeFinalFieldsOptions doFinal = Shared.shouldSerializeFinalFields(logger, context);
+      if (doFinal != SerializeFinalFieldsOptions.TRUE) {
+        conditionallyWarnUser(logger, context, field, doFinal);
+        return false;
       }
     }
-
     return true;
+  }
+
+  private static void conditionallyWarnUser(TreeLogger logger, GeneratorContext context,
+      JField field, SerializeFinalFieldsOptions doFinal) {
+    // the new rpc.final.serialize setting is checked first (defaults to false)
+    if (doFinal == SerializeFinalFieldsOptions.FALSE_NOWARN) {
+      return;
+    }
+    TreeLogger.Type logLevel;
+    // then check the legacy gwt.suppressNonStaticFinalFieldWarnings flag
+    if (Shared.shouldSuppressNonStaticFinalFieldWarnings(logger, context)) {
+      logLevel = TreeLogger.DEBUG;
+    } else if (isManuallySerializable(field.getEnclosingType())) {
+      // If the type has a custom serializer, assume the programmer knows best.
+      logLevel = TreeLogger.DEBUG;
+    } else {
+      logLevel = TreeLogger.WARN;
+    }
+    logger.branch(logLevel, "Field '" + field.toString()
+        + "' will not be serialized because it is final", null);
   }
 
   private static boolean directlyImplementsMarkerInterface(JClassType type) {

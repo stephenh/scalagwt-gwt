@@ -762,7 +762,8 @@ public final class ServerSerializationStreamReader extends AbstractSerialization
       setters = getSetters(instanceClass);
     }
 
-    Field[] serializableFields = SerializabilityUtil.applyFieldSerializationPolicy(instanceClass);
+    Field[] serializableFields = SerializabilityUtil.applyFieldSerializationPolicy(
+        serializationPolicy, instanceClass);
     for (Field declField : serializableFields) {
       assert (declField != null);
       if ((clientFieldNames != null) && !clientFieldNames.contains(declField.getName())) {

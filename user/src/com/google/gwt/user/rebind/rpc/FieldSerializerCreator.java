@@ -549,12 +549,7 @@ public class FieldSerializerCreator {
             "(" + fieldType.getQualifiedSourceName() + ") " + streamReadExpression;
       }
 
-      if (serializableField.isFinal()
-          && Shared.shouldSerializeFinalFields(logger, context)
-            != Shared.SerializeFinalFieldsOptions.TRUE) {
-        // if not serializing final fields ("false"/"false_nowarn")
-        // skip source writing
-      } else if (needsAccessorMethods(serializableField)) {
+      if (needsAccessorMethods(serializableField)) {
         sourceWriter.print("set");
         sourceWriter.print(Shared.capitalize(serializableField.getName()));
         sourceWriter.print("(instance, ");

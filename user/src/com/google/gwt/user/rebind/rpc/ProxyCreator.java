@@ -18,8 +18,8 @@ package com.google.gwt.user.rebind.rpc;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.impl.Impl;
 import com.google.gwt.core.ext.BadPropertyValueException;
-import com.google.gwt.core.ext.CachedPropertyInformation;
 import com.google.gwt.core.ext.CachedGeneratorResult;
+import com.google.gwt.core.ext.CachedPropertyInformation;
 import com.google.gwt.core.ext.ConfigurationProperty;
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.PropertyOracle;
@@ -62,6 +62,7 @@ import com.google.gwt.user.client.rpc.impl.RpcStatsContext;
 import com.google.gwt.user.linker.rpc.RpcLogArtifact;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
+import com.google.gwt.user.rebind.rpc.Shared.SerializeFinalFieldsOptions;
 import com.google.gwt.user.server.rpc.SerializationPolicyLoader;
 import com.google.gwt.user.server.rpc.impl.TypeNameObfuscator;
 
@@ -739,12 +740,17 @@ public class ProxyCreator {
       ByteArrayOutputStream baos = new ByteArrayOutputStream();
       OutputStreamWriter osw =
           new OutputStreamWriter(baos, SerializationPolicyLoader.SERIALIZATION_POLICY_FILE_ENCODING);
-      TypeOracle oracle = ctx.getTypeOracle();
       PrintWriter pw = new PrintWriter(osw);
 
       JType[] serializableTypes =
           unionOfTypeArrays(serializationSto.getSerializableTypes(), deserializationSto
               .getSerializableTypes(), new JType[] {serviceIntf});
+
+      SerializeFinalFieldsOptions doFinal = Shared.shouldSerializeFinalFields(logger, ctx);
+      pw.print(SerializationPolicyLoader.FINAL_FIELDS_KEYWORD);
+      pw.print(", ");
+      pw.print(doFinal == SerializeFinalFieldsOptions.TRUE);
+      pw.print('\n');
 
       for (int i = 0; i < serializableTypes.length; ++i) {
         JType type = serializableTypes[i];

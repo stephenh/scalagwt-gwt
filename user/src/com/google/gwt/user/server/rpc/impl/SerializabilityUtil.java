@@ -190,7 +190,7 @@ public class SerializabilityUtil {
    * serialization. The returned list will be sorted into a canonical order to
    * ensure consistent answers.
    */
-  public static Field[] applyFieldSerializationPolicy(Class<?> clazz) {
+  public static Field[] applyFieldSerializationPolicy(SerializationPolicy policy, Class<?> clazz) {
     Field[] serializableFields;
     synchronized (classSerializableFieldsCache) {
       serializableFields = classSerializableFieldsCache.get(clazz);
@@ -198,7 +198,7 @@ public class SerializabilityUtil {
         ArrayList<Field> fieldList = new ArrayList<Field>();
         Field[] fields = clazz.getDeclaredFields();
         for (Field field : fields) {
-          if (fieldQualifiesForSerialization(field)) {
+          if (fieldQualifiesForSerialization(policy, field)) {
             fieldList.add(field);
           }
         }
@@ -384,10 +384,12 @@ public class SerializabilityUtil {
     return (result == instanceType) ? null : result;
   }
 
+  static boolean isFinal(Field field) {
+    int fieldModifiers = field.getModifiers();
+    return Modifier.isFinal(fieldModifiers);
+  }
+
   static boolean isNotStaticTransientOrEnum(Field field) {
-    /*
-     * Only serialize fields that are not static or transient (including @GwtTransient).
-     */
     int fieldModifiers = field.getModifiers();
     return !Modifier.isStatic(fieldModifiers)
         && !Modifier.isTransient(fieldModifiers)
@@ -625,7 +627,7 @@ public class SerializabilityUtil {
     return false;
   }
 
-  private static boolean fieldQualifiesForSerialization(Field field) {
+  private static boolean fieldQualifiesForSerialization(SerializationPolicy policy, Field field) {
     if (Throwable.class == field.getDeclaringClass()) {
       /**
        * Only serialize Throwable's detailMessage field; all others are ignored.
@@ -640,7 +642,8 @@ public class SerializabilityUtil {
         return false;
       }
     } else {
-      return isNotStaticTransientOrEnum(field);
+      return isNotStaticTransientOrEnum(field)
+          && (!isFinal(field) || policy.shouldSerializeFinalFields());
     }
   }
 
@@ -725,7 +728,7 @@ public class SerializabilityUtil {
     } else if (instanceType.isArray()) {
       generateSerializationSignature(instanceType.getComponentType(), crc, policy);
     } else if (!instanceType.isPrimitive()) {
-      Field[] fields = applyFieldSerializationPolicy(instanceType);
+      Field[] fields = applyFieldSerializationPolicy(policy, instanceType);
       Set<String> clientFieldNames = policy.getClientFieldNamesForEnhancedClass(instanceType);
       for (Field field : fields) {
         assert (field != null);

@@ -18,6 +18,7 @@ package com.google.gwt.rpc.server;
 import com.google.gwt.rpc.client.ast.CommandSink;
 import com.google.gwt.rpc.client.impl.SimplePayloadSink;
 import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 import com.google.gwt.user.server.rpc.impl.SerializabilityUtil;
 
 import java.io.BufferedWriter;
@@ -125,7 +126,8 @@ public final class HostedModeClientOracle extends ClientOracle {
    */
   @Override
   public Field[] getOperableFields(Class<?> clazz) {
-    return SerializabilityUtil.applyFieldSerializationPolicy(clazz);
+    return SerializabilityUtil.applyFieldSerializationPolicy(
+        LegacySerializationPolicy.getInstance(), clazz);
   }
 
   /**

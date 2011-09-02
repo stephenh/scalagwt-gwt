@@ -75,4 +75,11 @@ public abstract class SerializationPolicy {
    */
   public abstract void validateSerialize(Class<?> clazz)
       throws SerializationException;
+
+  /**
+   * Returns whether the client was compiled with {@code rpc.final.serialize = true}.
+   */
+   public boolean shouldSerializeFinalFields() {
+     return false;
+   }
 }
