@@ -104,7 +104,9 @@ public class CompilationStateBuilder {
             unresolvedSimple.add(interner.intern(String.valueOf(simpleRef)));
           }
           for (char[][] qualifiedRef : cud.compilationResult().qualifiedReferences) {
-            unresolvedQualified.add(interner.intern(CharOperation.toString(qualifiedRef)));
+            // TODO(stephenh) Kill crappy source -> internal conversion
+            // https://github.com/scalagwt/scalagwt-gwt/issues/1
+            unresolvedQualified.add(interner.intern(CharOperation.toString(qualifiedRef).replace('.', '/')));
           }
           for (String jsniDep : jsniDeps) {
             unresolvedQualified.add(interner.intern(jsniDep));
@@ -123,7 +125,7 @@ public class CompilationStateBuilder {
           }
 
           for (CompiledClass cc : compiledClasses) {
-            allValidClasses.put(cc.getSourceName(), cc);
+            allValidClasses.put(cc.getInternalName(), cc);
           }
 
           builder.setClasses(compiledClasses).setTypes(types).setDependencies(dependencies)
@@ -137,7 +139,7 @@ public class CompilationStateBuilder {
     }
 
     /**
-     * A global cache of all currently-valid class files keyed by source name.
+     * A global cache of all currently-valid class files keyed by internal name.
      * This is used to validate dependencies when reusing previously cached
      * units, to make sure they can be recompiled if necessary.
      */
@@ -182,7 +184,7 @@ public class CompilationStateBuilder {
     void addValidUnit(CompilationUnit unit) {
       compiler.addCompiledUnit(unit);
       for (CompiledClass cc : unit.getCompiledClasses()) {
-        allValidClasses.put(cc.getSourceName(), cc);
+        allValidClasses.put(cc.getInternalName(), cc);
       }
     }
 
@@ -193,9 +195,7 @@ public class CompilationStateBuilder {
       // Initialize the set of valid classes to the initially cached units.
       for (CompilationUnit unit : cachedUnits.values()) {
         for (CompiledClass cc : unit.getCompiledClasses()) {
-          // Map by source name.
-          String sourceName = cc.getSourceName();
-          allValidClasses.put(sourceName, cc);
+          allValidClasses.put(cc.getInternalName(), cc);
         }
       }
 
@@ -293,7 +293,7 @@ public class CompilationStateBuilder {
         // Any units we invalidated must now be removed from the valid classes.
         for (CompilationUnit unit : invalidatedUnits) {
           for (CompiledClass cc : unit.getCompiledClasses()) {
-            allValidClasses.remove(cc.getSourceName());
+            allValidClasses.remove(cc.getInternalName());
           }
         }
       } while (builders.size() > 0);
