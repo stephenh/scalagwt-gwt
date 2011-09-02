@@ -17,8 +17,6 @@ package com.google.gwt.dev.util;
 
 import java.lang.reflect.Method;
 
-import com.google.gwt.dev.util.Name.BinaryName;
-
 /**
  * Java type helpers used.
  */
@@ -143,7 +141,7 @@ public class TypeInfo {
 
     // Everything else
     //
-    return BinaryName.toSourceName(type.getName());
+    return Name.getSourceNameForClass(type);
   }
 
   public static int isPrimitiveType(Class<?> type) {
