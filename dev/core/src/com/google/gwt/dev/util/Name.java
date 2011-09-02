@@ -86,12 +86,6 @@ public class Name {
         return internalName.replace('/', '.');
       }
       
-      public static String toSourceName(String internalName) {
-        assert isInternalName(internalName);
-        // don't change a trailing $ or slash to a .
-        return NON_TRAILING_DOLLAR_SLASH.matcher(internalName).replaceAll(".$1");
-      }
-  
       private InternalName() {
       }
     }
@@ -99,10 +93,6 @@ public class Name {
   // Non-trailing $
   private static final Pattern NON_TRAILING_DOLLAR =
     Pattern.compile("[$](\\p{javaJavaIdentifierStart})");
-
-  // Non-trailing $ or /
-  private static final Pattern NON_TRAILING_DOLLAR_SLASH =
-    Pattern.compile("[$/](\\p{javaJavaIdentifierStart})");
 
   /**
    * Get the binary name for a Java class.

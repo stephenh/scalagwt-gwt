@@ -65,13 +65,6 @@ public class NameTest extends TestCase {
   }
 
   public void testInternalName() {
-    assertEquals("org.test.Foo", InternalName.toSourceName("org/test/Foo"));
-    assertEquals("org.test.Foo.Bar",
-        InternalName.toSourceName("org/test/Foo$Bar"));
-    assertEquals("org.test.Foo.Bar.Baz",
-        InternalName.toSourceName("org/test/Foo$Bar$Baz"));
-    assertEquals("org.test.Foo.Bar.Baz$",
-        InternalName.toSourceName("org/test/Foo$Bar$Baz$"));
     assertEquals("org.test.Foo", InternalName.toBinaryName("org/test/Foo"));
     assertEquals("org.test.Foo$Bar",
         InternalName.toBinaryName("org/test/Foo$Bar"));
