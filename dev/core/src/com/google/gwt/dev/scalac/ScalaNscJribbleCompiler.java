@@ -21,19 +21,33 @@ import scala.tools.nsc.CompilerCommand;
 import scala.tools.nsc.Global;
 import scala.tools.nsc.Settings;
 
-/** Implements the {@link ScalaCompiler} API by calling nsc in-process. */
-public class NscScalaCompiler implements ScalaCompiler {
-  
+/** Implements the {@link JribbleCompiler} API by calling nsc in-process. */
+public class ScalaNscJribbleCompiler implements JribbleCompiler {
+
   // TODO(stephenh) Think about binary-only annotations, ecj loads them on demand, do we need to?
 
-  private static final Function1<String, BoxedUnit> error = new AbstractFunction1<String, BoxedUnit>() {
-    @Override
-    public BoxedUnit apply(String error) {
-      System.err.println("scalac error: "+ error);
-      return null;
-    }
-  };
-  
+  private static final Function1<String, BoxedUnit> error =
+      new AbstractFunction1<String, BoxedUnit>() {
+        @Override
+        public BoxedUnit apply(String error) {
+          System.err.println("scalac error: " + error);
+          return null;
+        }
+      };
+  private static final List<String> primitives = new ArrayList<String>();
+
+  static {
+    primitives.add("scala/Boolean");
+    primitives.add("scala/Byte");
+    primitives.add("scala/Char");
+    primitives.add("scala/Double");
+    primitives.add("scala/Float");
+    primitives.add("scala/Int");
+    primitives.add("scala/Long");
+    primitives.add("scala/Short");
+    primitives.add("scala/Unit");
+  }
+
   // TODO(stephenh) Use java.io.tmpdir + per-instance tmpdir?
   private final File tmp = new File("/tmp/gwt-scalac");
   private final File source = new File(tmp, "source");
@@ -42,7 +56,7 @@ public class NscScalaCompiler implements ScalaCompiler {
   private final List<String> files = new ArrayList<String>();
   private boolean hasJavaCoreFiles = false;
 
-  public NscScalaCompiler() {
+  public ScalaNscJribbleCompiler() {
     try {
       FileUtils.deleteDirectory(tmp);
     } catch (IOException e) {
@@ -77,7 +91,7 @@ public class NscScalaCompiler implements ScalaCompiler {
   }
 
   @Override
-  public void addScalaSource(String internalName, String content) {
+  public void addSource(String internalName, String content) {
     try {
       File f = new File(source, internalName + ".scala");
       files.add(f.getAbsolutePath());
@@ -88,7 +102,7 @@ public class NscScalaCompiler implements ScalaCompiler {
   }
 
   @Override
-  public Collection<ScalacUnitResult> compile() {
+  public Collection<JribbleUnitResult> compile() {
     try {
       return doCompile();
     } catch (Exception e) {
@@ -98,7 +112,7 @@ public class NscScalaCompiler implements ScalaCompiler {
 
   private void invokeNsc(List<String> args) {
     Settings ss = new Settings(error);
-    ErrorCollector r = new ErrorCollector();
+    ScalaErrorCollector r = new ScalaErrorCollector();
     CompilerCommand command = new CompilerCommand(JavaConversions.asScalaBuffer(args).toList(), ss);
     Global compiler = new Global(command.settings(), r);
     Global.Run run = compiler.new Run();
@@ -106,10 +120,10 @@ public class NscScalaCompiler implements ScalaCompiler {
   }
 
   @SuppressWarnings("unchecked")
-  private Collection<ScalacUnitResult> doCompile() throws Exception{
+  private Collection<JribbleUnitResult> doCompile() throws Exception {
     if (hasJavaCoreFiles) {
       System.out.println("Skipping scala files until java.* is compiled--rerun compile");
-      return new ArrayList<ScalacUnitResult>();
+      return new ArrayList<JribbleUnitResult>();
     }
     System.out.println("Compiling " + files.size() + " scala + java files");
 
@@ -119,23 +133,25 @@ public class NscScalaCompiler implements ScalaCompiler {
     System.out.println("Compiling jribble");
     invokeNsc(makeArgs("jribble"));
 
-    Map<String, ScalacUnitResult> byUnitName = new HashMap<String, ScalacUnitResult>();
+    Map<String, JribbleUnitResult> byUnitName = new HashMap<String, JribbleUnitResult>();
     String targetPath = target.getAbsolutePath();
     // find all .class files and group by the original .scala compilation unit
-    for (File classFile : (List<File>) FileUtils.listFiles(target, new String[] { "class" }, true)) {
+    for (File classFile : (List<File>) FileUtils.listFiles(target, new String[] {"class"}, true)) {
       String internalName = extractInternalName(targetPath, classFile);
       byte[] byteCode = FileUtils.readFileToByteArray(classFile);
       String unitName = extractUnitName(internalName, byteCode);
-      ScalacUnitResult unit = byUnitName.get(unitName);
+      JribbleUnitResult unit = byUnitName.get(unitName);
       if (unit == null) {
-        unit = new ScalacUnitResult(unitName);
+        unit = new JribbleUnitResult(unitName);
         byUnitName.put(unitName, unit);
       }
-      String jribblePath = dropExtension(classFile.getPath()) + ".jribble";
-      unit.classes.add(new ScalacClassResult(
-          internalName,
-          byteCode,
-          FileUtils.readFileToString(new File(jribblePath))));
+      String jribble = null;
+      // the primitive ASTs are broken and empty anyway
+      if (!primitives.contains(unit.internalName)) {
+        String jribblePath = dropExtension(classFile.getPath()) + ".jribble";
+        jribble = FileUtils.readFileToString(new File(jribblePath));
+      }
+      unit.classes.add(new JribbleClassResult(internalName, byteCode, jribble));
     }
     System.out.println("Compiled scala units " + byUnitName.size());
     return byUnitName.values();

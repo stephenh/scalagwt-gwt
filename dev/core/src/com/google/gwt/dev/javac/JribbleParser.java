@@ -8,6 +8,12 @@ import java.io.StringReader;
 
 import scala.Either;
 
+/**
+ * Parses jribble ASTs from their on-disk format.
+ *
+ * TODO(stephenh) Either kill (we should in process anyway) or use protobuffers.
+ * TODO(stephenh) Move next to other jribble stuff
+ */
 public class JribbleParser {
 
   private static final DefParser parser = new DefParserForJava();

@@ -23,7 +23,7 @@ import com.google.gwt.dev.jjs.ast.JDeclaredType;
 import com.google.gwt.dev.jjs.impl.GwtAstBuilder;
 import com.google.gwt.dev.js.ast.JsRootScope;
 import com.google.gwt.dev.resource.Resource;
-import com.google.gwt.dev.scalac.ScalaGwtCompiler;
+import com.google.gwt.dev.scalac.JribbleExtraCompiler;
 import com.google.gwt.dev.util.StringInterner;
 import com.google.gwt.dev.util.log.speedtracer.CompilerEventType;
 import com.google.gwt.dev.util.log.speedtracer.DevModeEventType;
@@ -149,7 +149,7 @@ public class CompilationStateBuilder {
     private final GwtAstBuilder astBuilder = new GwtAstBuilder();
 
     // TODO(stephenh) Do not hard-code to ScalaGwtCompiler
-    private final ExtraCompiler extraCompiler = new ScalaGwtCompiler();
+    private final ExtraCompiler extraCompiler = new JribbleExtraCompiler();
 
     private transient LinkedBlockingQueue<CompilationUnitBuilder> buildQueue;
 

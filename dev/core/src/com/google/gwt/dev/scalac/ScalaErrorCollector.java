@@ -1,17 +1,16 @@
 package com.google.gwt.dev.scalac;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.eclipse.jdt.core.compiler.CategorizedProblem;
 import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.internal.compiler.problem.DefaultProblem;
 
-import scala.tools.nsc.util.Position;
-import scala.tools.nsc.reporters.Reporter;
-import scala.tools.nsc.reporters.Reporter.Severity;
+import java.util.HashMap;
+import java.util.Map;
 
-public class ErrorCollector extends Reporter  {
+import scala.tools.nsc.reporters.Reporter;
+import scala.tools.nsc.util.Position;
+
+public class ScalaErrorCollector extends Reporter  {
 
   // TODO(stephenh) Put back into each unit's CompilationUnitBuilders
   private final Map<String, CategorizedProblem> m = new HashMap<String, CategorizedProblem>();
