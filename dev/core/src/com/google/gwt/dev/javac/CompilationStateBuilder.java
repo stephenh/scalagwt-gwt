@@ -23,7 +23,6 @@ import com.google.gwt.dev.jjs.ast.JDeclaredType;
 import com.google.gwt.dev.jjs.impl.GwtAstBuilder;
 import com.google.gwt.dev.js.ast.JsRootScope;
 import com.google.gwt.dev.resource.Resource;
-import com.google.gwt.dev.scalac.JribbleExtraCompiler;
 import com.google.gwt.dev.util.StringInterner;
 import com.google.gwt.dev.util.log.speedtracer.CompilerEventType;
 import com.google.gwt.dev.util.log.speedtracer.DevModeEventType;
@@ -149,7 +148,7 @@ public class CompilationStateBuilder {
     private final GwtAstBuilder astBuilder = new GwtAstBuilder();
 
     // TODO(stephenh) Do not hard-code to ScalaGwtCompiler
-    private final ExtraCompiler extraCompiler = new JribbleExtraCompiler();
+    private final ExtraCompiler extraCompiler = ExtraCompilerDiscovery.createOrNull();
 
     private transient LinkedBlockingQueue<CompilationUnitBuilder> buildQueue;
 
@@ -224,16 +223,18 @@ public class CompilationStateBuilder {
         buildThread.setName("CompilationUnitBuilder");
         buildThread.start();
 
-        Collection<CompilationUnitBuilder> nonJavaBuilders = extraCompiler.stealUnits(logger, builders, cachedUnits.values());
-        for (CompilationUnitBuilder cub : nonJavaBuilders) {
-          for (CompiledClass cc : cub.getCompiledClasses()) {
-            // allValidClasses is maintained by the JDT UnitProcessorImpl, which we don't hit, so update it here
-            allValidClasses.put(cc.getInternalName(), cc);
-            // Add classes to the JDT compiler in case .java files refer to .scala files
-            // (Can't use addValidUnit because our CompilationUnit hasn't been built by the build queue yet)
-            compiler.addCompiledClass(cc);
+        if (extraCompiler != null) {
+          Collection<CompilationUnitBuilder> nonJavaBuilders = extraCompiler.stealUnits(logger,
+              builders, cachedUnits.values());
+          for (CompilationUnitBuilder cub : nonJavaBuilders) {
+            for (CompiledClass cc : cub.getCompiledClasses()) {
+              // allValidClasses is otherwise maintained by the JDT UnitProcessorImpl
+              allValidClasses.put(cc.getInternalName(), cc);
+              // Add classes to the JDT compiler in case .java files refer to .scala files
+              compiler.addCompiledClass(cc);
+            }
+            buildQueue.add(cub);
           }
-          buildQueue.add(cub);
         }
 
         Event jdtCompilerEvent = SpeedTracerLogger.start(eventType);

@@ -1,7 +1,6 @@
 package com.google.gwt.dev.jjs.impl;
 
 import static com.google.gwt.dev.jjs.impl.AstUtils.toRef;
-import static com.google.gwt.thirdparty.guava.common.collect.Sets.newHashSet;
 
 import com.google.gwt.dev.jjs.SourceOrigin;
 import com.google.gwt.dev.jjs.ast.JClassType;
@@ -11,6 +10,9 @@ import com.google.jribble.ast.Primitive;
 
 import junit.framework.Assert;
 import junit.framework.TestCase;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class JribbleReferenceMapperTest extends TestCase {
 
@@ -40,4 +42,11 @@ public class JribbleReferenceMapperTest extends TestCase {
     Assert.assertEquals(newHashSet(), m.getTouchedTypes());
   }
 
+  private static <T> Set<T> newHashSet(T... ts) {
+    HashSet<T> set = new HashSet<T>();
+    for (T t : ts) {
+      set.add(t);
+    }
+    return set;
+  }
 }

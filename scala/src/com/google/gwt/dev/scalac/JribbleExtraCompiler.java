@@ -6,14 +6,15 @@ import com.google.gwt.dev.javac.CompilationUnitBuilder;
 import com.google.gwt.dev.javac.CompiledClass;
 import com.google.gwt.dev.javac.Dependencies;
 import com.google.gwt.dev.javac.ExtraCompiler;
-import com.google.gwt.dev.javac.JribbleParser;
 import com.google.gwt.dev.javac.JsniMethod;
 import com.google.gwt.dev.javac.MethodArgNamesLookup;
 import com.google.gwt.dev.jjs.ast.JDeclaredType;
 import com.google.gwt.dev.jjs.impl.JribbleAstBuilder;
+import com.google.gwt.dev.jribble.JribbleClassResult;
+import com.google.gwt.dev.jribble.JribbleCompiler;
+import com.google.gwt.dev.jribble.JribbleUnitResult;
 import com.google.gwt.dev.util.Name.BinaryName;
 import com.google.gwt.dev.util.Name.InternalName;
-import com.google.gwt.thirdparty.guava.common.collect.Lists;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -102,7 +103,7 @@ public class JribbleExtraCompiler implements ExtraCompiler {
     }
     cub.setTypes(asts);
     cub.setDependencies(Dependencies.buildFromApiRefs(InternalName
-        .getPackageName(unit.internalName), Lists.newArrayList(apiRefs)));
+        .getPackageName(unit.internalName), new ArrayList<String>(apiRefs)));
     cub.setMethodArgs(methodArgNames);
     cub.setClasses(ccs);
     cub.setJsniMethods(new ArrayList<JsniMethod>());

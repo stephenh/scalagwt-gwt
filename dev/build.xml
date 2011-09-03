@@ -113,9 +113,6 @@
           <include name="guava/guava-r06/guava-r06-rebased-2.jar" />
         </fileset>
         <fileset file="build.xml"/>
-        <fileset dir="${gwt.root}/scalagwt-lib">
-          <include name="jribble_2.9.0-1-0.1-SNAPSHOT.jar"/>
-        </fileset>
       </sourcefiles>
       <targetfiles>
         <fileset file="${alldeps.jar}"/>
@@ -178,7 +175,6 @@
           <!-- htmlunit dependencies not already included: END -->
           <zipfileset src="${gwt.tools.lib}/sun/swingworker/swing-worker-1.1.jar" />
           <zipfileset src="${gwt.tools.lib}/guava/guava-r06/guava-r06-rebased-2.jar" />
-          <zipfileset src="${gwt.root}/scalagwt-lib/jribble_2.9.0-1-0.1-SNAPSHOT.jar" />
         </gwt.jar>
       </sequential>
     </outofdate>
@@ -221,7 +217,6 @@
           <pathelement location="${gwt.tools.lib}/apache/commons/commons-io-1.4.jar" />
           <pathelement location="${gwt.tools.lib}/tomcat/commons-collections-3.1.jar" />
           <pathelement location="${gwt.tools.lib}/guava/guava-r06/guava-r06-rebased-2.jar" />
-          <fileset dir="${gwt.root}/scalagwt-lib" includes="*.jar"/>
       </classpath>
     </gwt.javac>
   </target>
@@ -231,7 +226,6 @@
       <src path="core/src" />
       <classpath>
         <pathelement location="${alldeps.jar}" />
-        <fileset dir="${gwt.root}/scalagwt-lib" includes="*.jar"/>
       </classpath>
     </gwt.javac>
     <copy todir="${javac.out}">

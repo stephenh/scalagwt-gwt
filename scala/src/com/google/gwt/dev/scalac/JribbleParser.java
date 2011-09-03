@@ -1,4 +1,4 @@
-package com.google.gwt.dev.javac;
+package com.google.gwt.dev.scalac;
 
 import com.google.jribble.DefParser;
 import com.google.jribble.DefParserForJava;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>gwt-dev</name>
+	<name>gwt-scala</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -10,21 +10,15 @@
 			<arguments>
 			</arguments>
 		</buildCommand>
-		<buildCommand>
-			<name>com.atlassw.tools.eclipse.checkstyle.CheckstyleBuilder</name>
-			<arguments>
-			</arguments>
-		</buildCommand>
 	</buildSpec>
 	<natures>
 		<nature>org.eclipse.jdt.core.javanature</nature>
-		<nature>com.atlassw.tools.eclipse.checkstyle.CheckstyleNature</nature>
 	</natures>
 	<linkedResources>
 		<link>
-			<name>core</name>
+			<name>scalagwt-lib</name>
 			<type>2</type>
-			<locationURI>GWT_ROOT/dev/core</locationURI>
+			<locationURI>GWT_ROOT/scalagwt-lib</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

@@ -2,6 +2,9 @@ package com.google.gwt.dev.scalac;
 
 import com.google.gwt.dev.asm.ClassReader;
 import com.google.gwt.dev.asm.commons.EmptyVisitor;
+import com.google.gwt.dev.jribble.JribbleClassResult;
+import com.google.gwt.dev.jribble.JribbleCompiler;
+import com.google.gwt.dev.jribble.JribbleUnitResult;
 
 import org.apache.commons.io.FileUtils;
 
