@@ -16,6 +16,7 @@
 package com.google.gwt.user.server.rpc.impl;
 
 import com.google.gwt.core.client.GWT;
+import com.google.gwt.rpc.server.Pair;
 import com.google.gwt.user.client.rpc.CustomFieldSerializer;
 import com.google.gwt.user.client.rpc.GwtTransient;
 import com.google.gwt.user.client.rpc.SerializationException;
@@ -69,8 +70,8 @@ public class SerializabilityUtil {
    * {@link #classServerCustomSerializerCache}, so be aware deadlock potential
    * when changing this code.
    */
-  private static final Map<Class<?>, String> classCRC32Cache =
-      new IdentityHashMap<Class<?>, String>();
+  private static final Map<Pair<SerializationPolicy, Class<?>>, String> classCRC32Cache =
+      new IdentityHashMap<Pair<SerializationPolicy, Class<?>>, String>();
 
   /**
    * A permanent cache of all serializable fields on classes. This is safe to do
@@ -80,8 +81,8 @@ public class SerializabilityUtil {
    * NOTE: to prevent deadlock, you may NOT synchronize {@link #classCRC32Cache}
    * after synchronizing on this field.
    */
-  private static final Map<Class<?>, Field[]> classSerializableFieldsCache =
-      new IdentityHashMap<Class<?>, Field[]>();
+  private static final Map<Pair<SerializationPolicy, Class<?>>, Field[]> classSerializableFieldsCache =
+      new IdentityHashMap<Pair<SerializationPolicy, Class<?>>, Field[]>();
 
   /**
    * A permanent cache of all which classes onto custom field serializers. This
@@ -193,7 +194,8 @@ public class SerializabilityUtil {
   public static Field[] applyFieldSerializationPolicy(SerializationPolicy policy, Class<?> clazz) {
     Field[] serializableFields;
     synchronized (classSerializableFieldsCache) {
-      serializableFields = classSerializableFieldsCache.get(clazz);
+      Pair<SerializationPolicy, Class<?>> pair = new Pair<SerializationPolicy, Class<?>>(policy, clazz);
+      serializableFields = classSerializableFieldsCache.get(pair);
       if (serializableFields == null) {
         ArrayList<Field> fieldList = new ArrayList<Field>();
         Field[] fields = clazz.getDeclaredFields();
@@ -207,7 +209,7 @@ public class SerializabilityUtil {
         // sort the fields by name
         Arrays.sort(serializableFields, 0, serializableFields.length, FIELD_COMPARATOR);
 
-        classSerializableFieldsCache.put(clazz, serializableFields);
+        classSerializableFieldsCache.put(pair, serializableFields);
       }
     }
     return serializableFields;
@@ -329,7 +331,9 @@ public class SerializabilityUtil {
       SerializationPolicy policy) {
     String result;
     synchronized (classCRC32Cache) {
-      result = classCRC32Cache.get(instanceType);
+      Pair<SerializationPolicy, Class<?>> pair = new Pair<SerializationPolicy, Class<?>>(policy,
+          instanceType);
+      result = classCRC32Cache.get(pair);
       if (result == null) {
         CRC32 crc = new CRC32();
         try {
@@ -338,7 +342,7 @@ public class SerializabilityUtil {
           throw new RuntimeException("Could not compute the serialization signature", e);
         }
         result = Long.toString(crc.getValue());
-        classCRC32Cache.put(instanceType, result);
+        classCRC32Cache.put(pair, result);
       }
     }
     return result;
