@@ -20,6 +20,7 @@ import com.google.gwt.dev.asm.FieldVisitor;
 import com.google.gwt.dev.asm.MethodVisitor;
 import com.google.gwt.dev.asm.Opcodes;
 import com.google.gwt.dev.asm.commons.EmptyVisitor;
+import com.google.gwt.dev.javac.FileExt;
 import com.google.gwt.dev.util.Name;
 import com.google.gwt.dev.util.Name.InternalName;
 import com.google.gwt.dev.util.StringInterner;
@@ -399,9 +400,9 @@ public class CollectClassData extends EmptyVisitor {
       // skip synthetic methods
       return null;
     }
-    boolean isJribble = source.endsWith(".scala");
+    boolean skipSynthenticThis = FileExt.isForJribble(source);
     CollectMethodData mv = new CollectMethodData(classType, access, name, desc,
-        signature, exceptions, isJribble);
+        signature, exceptions, skipSynthenticThis);
     methods.add(mv);
     return mv;
   }

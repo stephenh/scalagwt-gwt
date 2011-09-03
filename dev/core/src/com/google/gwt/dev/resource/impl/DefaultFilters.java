@@ -15,6 +15,8 @@
  */
 package com.google.gwt.dev.resource.impl;
 
+import com.google.gwt.dev.javac.FileExt;
+
 import org.apache.tools.ant.types.ZipScanner;
 
 import java.util.regex.Pattern;
@@ -76,15 +78,20 @@ public class DefaultFilters {
       return justThisFileTypeFilter;
     }
 
-    public String getSuffix() {
-      return suffix;
-    }
-
     public boolean matches(String path) {
       if (suffix == null) {
         return true;
       }
-      return path.endsWith(suffix) || (".java".equals(suffix) && path.endsWith(".scala"));
+      if (this == JAVA_FILES) {
+        return FileExt.isSource(path);
+      } else {
+        return path.endsWith(suffix);
+      }
+    }
+
+    // for testing
+    String getSuffix() {
+      return suffix;
     }
   }
 

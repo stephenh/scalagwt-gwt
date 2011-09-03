@@ -230,7 +230,7 @@ public class CompilationStateBuilder {
             for (CompiledClass cc : cub.getCompiledClasses()) {
               // allValidClasses is otherwise maintained by the JDT UnitProcessorImpl
               allValidClasses.put(cc.getInternalName(), cc);
-              // Add classes to the JDT compiler in case .java files refer to .scala files
+              // Add classes to the JDT compiler in case Java units refer to the non-Java units
               compiler.addCompiledClass(cc);
             }
             buildQueue.add(cub);

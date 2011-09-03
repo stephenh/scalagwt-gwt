@@ -941,7 +941,7 @@ public class TypeOracleMediator extends TypeOracleBuilder {
         }
         if (enclosingType.isGenericType() != null
             && (classData.getAccess() & (Opcodes.ACC_STATIC | Opcodes.ACC_INTERFACE)) != 0
-            && !classData.getSource().endsWith(".scala")) {
+            && !FileExt.isForJribble(classData.getSource())) {
           // TODO(stephenh) Ensure excluding .scala files from this check is correct.
           // https://github.com/scalagwt/scalagwt-gwt/issues/5
           // If the inner class doesn't have access to it's enclosing type's
