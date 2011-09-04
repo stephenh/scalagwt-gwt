@@ -1,0 +1,30 @@
+
+* `gwt-dev.jar`
+  * Has new `ExtraCompiler` interface + `CompilationStateBuilder` "steal units" hook
+  * `FileExt` class for `.java`/`.scala` path logic
+  * All other changes are separate name mangling fix
+  * No new dependencies
+
+* `gwt-jribble.jar` + `jribble_2.9.0-1-0.1-SNAPSHOT` (need to be combined)
+  * No GWT or (eventually) Scala dependencies (doesn't live in GWT, I was just lazy)
+  * Has `JribbleCompiler`, `JribbleUnitResult`, `JribbleClassResult`--classes for any language that wants to plug into GWT via jribble
+  * Has Jribble ASTs
+
+* `scala-compiler.jar`, `scala-library.jar`, `factorymanifests.jar`
+  * No GWT/jribble dependencies
+  * Added `-Xplugin-classes` option for later using `factorymanifests.jar` sans path
+  * Don't build `scala-library-gwt` yet--wait until we can use `CompileModule`
+
+* `gwt-scala.jar`
+  * Depends on `gwt-dev.jar`, `jribble.jar`, and `scala-compiler.jar`
+  * Has `JribbleExtraCompiler`
+    * Fairly generic implementation of GWT `ExtraCompiler` for jribble languages
+    * Somehow defaults to the `ScalaNscJribbleCompiler`
+  * `ScalaNscJribbleCompiler` calls Scala's nsc
+    * Currently munging `/bin`, `/src` folders in `/tmp`
+  * `JribbleAstBuilder` for heavy lifting of jribble AST -> GWT AST translation
+
+* `scala-library-jribble.jar`
+  * `ant lib-jribble` in `scalagwt-scala`
+  * Has `ScalaLibrary.gwtar`
+
