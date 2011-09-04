@@ -186,7 +186,7 @@ public class ScalaNscJribbleCompiler implements JribbleCompiler {
     return dropExtension(path.substring(parentPath.length() + 1));
   }
 
-  /** @return {@code foo/Foo} for {@code foo/Foo$Bar} */
+  /** @return {@code foo/Foo} for {@code foo/Foo$Bar} (uses the SourceFile attribute) */
   private static String extractUnitName(String internalName, byte[] byteCode) {
     // glean the source file from the bytecode
     ClassReader reader = new ClassReader(byteCode);
