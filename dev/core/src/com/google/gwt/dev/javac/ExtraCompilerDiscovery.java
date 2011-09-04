@@ -11,12 +11,17 @@ public class ExtraCompilerDiscovery {
   public static ExtraCompiler createOrNull() {
     String className = System.getProperty(overrideKey, defaultImpl);
     try {
-      return (ExtraCompiler) Class.forName(className).newInstance();
+      ExtraCompiler compiler = (ExtraCompiler) Class.forName(className).newInstance();
+      System.out.println("Found ExtraCompiler " + compiler);
+      return compiler;
     } catch (InstantiationException e) {
+      System.out.println("Did not find ExtraCompiler " + className);
       return null;
     } catch (IllegalAccessException e) {
+      System.out.println("Did not find ExtraCompiler " + className);
       return null;
     } catch (ClassNotFoundException e) {
+      System.out.println("Did not find ExtraCompiler " + className);
       return null;
     }
   }

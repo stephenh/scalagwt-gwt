@@ -147,7 +147,6 @@ public class CompilationStateBuilder {
 
     private final GwtAstBuilder astBuilder = new GwtAstBuilder();
 
-    // TODO(stephenh) Do not hard-code to ScalaGwtCompiler
     private final ExtraCompiler extraCompiler = ExtraCompilerDiscovery.createOrNull();
 
     private transient LinkedBlockingQueue<CompilationUnitBuilder> buildQueue;
