@@ -1,0 +1,44 @@
+<project name="scala">
+
+  <property name="gwt.root" location=".." />
+  <property name="project.tail" value="scala" />
+  <property name="test.args" value="-ea" />
+  <property name="test.jvmargs" value="-ea" />
+  <import file="${gwt.root}/platforms.ant.xml" />
+  <import file="${gwt.root}/common.ant.xml" />
+
+  <target name="compile">
+    <mkdir dir="${javac.out}"/>
+    <gwt.javac>
+      <classpath>
+        <pathelement location="${gwt.root}/scalagwt-lib/jribble_2.9.0-1-0.1-SNAPSHOT.jar" />
+        <pathelement location="${gwt.root}/scalagwt-lib/scala-compiler.jar" />
+        <pathelement location="${gwt.root}/scalagwt-lib/scala-library.jar" />
+        <pathelement location="${gwt.build.lib}/gwt-jribble.jar" />
+        <pathelement location="${gwt.build.lib}/gwt-dev.jar" />
+      </classpath>
+    </gwt.javac>
+  </target>
+
+  <target name="build" depends="compile">
+    <mkdir dir="${gwt.build.lib}" />
+    <outofdate>
+      <sourcefiles>
+        <fileset dir="src" />
+        <fileset dir="${javac.out}" />
+        <fileset dir="${project.build}/bin" />
+      </sourcefiles>
+      <targetfiles>
+        <fileset file="${project.lib}"/>
+      </targetfiles>
+      <sequential>
+        <gwt.jar>
+          <fileset dir="${javac.out}" />
+        </gwt.jar>
+      </sequential>
+    </outofdate>
+  </target>
+
+</project>
+
+

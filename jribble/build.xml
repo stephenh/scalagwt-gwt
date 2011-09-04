@@ -1,0 +1,36 @@
+<project name="jribble">
+
+  <property name="gwt.root" location=".." />
+  <property name="project.tail" value="jribble" />
+  <property name="test.args" value="-ea" />
+  <property name="test.jvmargs" value="-ea" />
+  <import file="${gwt.root}/platforms.ant.xml" />
+  <import file="${gwt.root}/common.ant.xml" />
+
+  <target name="compile">
+    <mkdir dir="${javac.out}"/>
+    <gwt.javac/>
+  </target>
+
+  <target name="build" depends="compile">
+    <mkdir dir="${gwt.build.lib}" />
+    <outofdate>
+      <sourcefiles>
+        <fileset dir="src" />
+        <fileset dir="${javac.out}" />
+        <fileset dir="${project.build}/bin" />
+      </sourcefiles>
+      <targetfiles>
+        <fileset file="${project.lib}"/>
+      </targetfiles>
+      <sequential>
+        <gwt.jar>
+          <fileset dir="${javac.out}" />
+        </gwt.jar>
+      </sequential>
+    </outofdate>
+  </target>
+
+</project>
+
+
