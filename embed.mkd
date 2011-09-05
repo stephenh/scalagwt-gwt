@@ -6,7 +6,7 @@ Assumes embedding.
 
 What is "embedding"? Merely GWT calling the Scala compiler (on the IDE/CLI classpath as `scala-compiler.jar` as usual) with specific `-classpath`, `-javabootclasspath`, and `-bootclasspath` arguments. Skip to [ScalaNscJribbleCompiler](https://github.com/stephenh/scalagwt-gwt/blob/embed/scala/src/com/google/gwt/dev/scalac/ScalaNscJribbleCompiler.java) for a quick look at the naive implementation.
 
-This is just like any other compiler run, except that GWT has had to parse `<module>.gwt.xml` files, and scan source/super-source folders, to find out which `.java`, `.scala`, and `.class` files it wants the user program to be compiled with. Note that GWT already figures all of this out for compiling `.java` files with the JDT (see the [JdtCompiler](https://github.com/stephenh/scalagwt-gwt/blob/embed/dev/core/src/com/google/gwt/dev/javac/JdtCompiler.java) for how `ecj` is embedded).
+This is just like any other scalac compiler run, except that GWT has had to parse `<module>.gwt.xml` files, and scan source/super-source folders, to find out which `.java`, `.scala`, and `.class` files it wants the user program to be compiled with. Note that GWT already figures all of this out for compiling `.java` files with the JDT (see the [JdtCompiler](https://github.com/stephenh/scalagwt-gwt/blob/embed/dev/core/src/com/google/gwt/dev/javac/JdtCompiler.java) for how `ecj` is embedded).
 
 `jribble`
 ---------
@@ -95,7 +95,7 @@ For a Scala release:
 User Project Configuration
 ==========================
 
-Ideally, post-upstream merges, set up a classpath with:
+Ideally, post-upstream merges, a user would setup their project for ScalaGWT by just configuring their classpath with:
 
 * Stock `scala-compiler.jar`
 * Stock `scala-library.jar`
@@ -105,6 +105,8 @@ Ideally, post-upstream merges, set up a classpath with:
 * Stock `gwt-dev.jar`
 * `jribble.jar`
 * `gwt-scala.jar`
+
+Then just invoke GWT dev mode/compiler as usual.
 
 Tangent
 -------
