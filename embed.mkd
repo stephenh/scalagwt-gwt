@@ -1,30 +1,127 @@
 
-* `gwt-dev.jar`
-  * Has new `ExtraCompiler` interface + `CompilationStateBuilder` "steal units" hook
-  * `FileExt` class for `.java`/`.scala` path logic
-  * All other changes are separate name mangling fix
-  * No new dependencies
+Proposed Project Organization
+=============================
 
-* `gwt-jribble.jar` + `jribble_2.9.0-1-0.1-SNAPSHOT` (need to be combined)
-  * No GWT or (eventually) Scala dependencies (doesn't live in GWT, I was just lazy)
-  * Has `JribbleCompiler`, `JribbleUnitResult`, `JribbleClassResult`--classes for any language that wants to plug into GWT via jribble
-  * Has Jribble ASTs
+Assumes embedding.
 
-* `scala-compiler.jar`, `scala-library.jar`, `factorymanifests.jar`
-  * No GWT/jribble dependencies
-  * Added `-Xplugin-classes` option for later using `factorymanifests.jar` sans path
-  * Don't build `scala-library-gwt` yet--wait until we can use `CompileModule`
+What is "embedding"? Merely GWT calling the Scala compiler (on the IDE/CLI classpath as `scala-compiler.jar` as usual) with specific `-classpath`, `-javabootclasspath`, and `-bootclasspath` arguments. Skip to [ScalaNscJribbleCompiler](https://github.com/stephenh/scalagwt-gwt/blob/embed/scala/src/com/google/gwt/dev/scalac/ScalaNscJribbleCompiler.java) for a quick look at the naive implementation.
 
+This is just like any other compiler run, except that GWT has had to parse `<module>.gwt.xml` files, and scan source/super-source folders, to find out which `.java`, `.scala`, and `.class` files it wants the user program to be compiled with. Note that GWT already figures all of this out for compiling `.java` files with the JDT (see the [JdtCompiler](https://github.com/stephenh/scalagwt-gwt/blob/embed/dev/core/src/com/google/gwt/dev/javac/JdtCompiler.java) for how `ecj` is embedded).
+
+`jribble`
+---------
+
+Not much changed, other than new `JribbleCompiler` interface.
+
+* Should not have any dependencies on either GWT or (eventually) Scala.
+* Currently in two jars, `jribble_2.8.0-1-0.1-SNAPSHOT.jar` + `gwt-jribble.jar`, because I was lazy, needs to be merged
+* Has [JribbleCompiler](https://github.com/stephenh/scalagwt-gwt/blob/embed/jribble/src/com/google/gwt/dev/jribble/JribbleCompiler.java), which is the API for any language that wants to reuse GWT's jribble integration
+  * Basically: take some bytecode (the GWT-arranged client-side classpath), some changed Java files, changed source files, hand back the new bytecode + jribble ASTs + compile errors
+  * Caveat: API could be changed to stateless (one `compile` method with 3 lists as arguments)
+  * Caveat: bytecode would ideally be supplied by a callback, like JDT's [INameEnvironment](https://github.com/stephenh/scalagwt-gwt/blob/embed/dev/core/src/com/google/gwt/dev/javac/JdtCompiler.java) as this (probably) facilitates supporting binary-only annotations
+  * Works in-process, so ideally saving any source, `.class`, or `.jribble` files to disk can be avoided (currently `ScalaNscJribbleCompiler` does make heavy use of the disk)
+* Owned by ScalaGWT team, but released very infrequently.
+
+`gwt-dev`
+---------
+
+* Adds new [ExtraCompiler](https://github.com/stephenh/scalagwt-gwt/blob/embed/dev/core/src/com/google/gwt/dev/javac/ExtraCompiler.java) interface + [CompilationStateBuilder](https://github.com/stephenh/scalagwt-gwt/blob/embed/dev/core/src/com/google/gwt/dev/javac/CompilationStateBuilder.java) hook to compile non-Java units before GWT has JDT compile the Java units
+  * [ExtraCompilerDiscovery](https://github.com/stephenh/scalagwt-gwt/blob/embed/dev/core/src/com/google/gwt/dev/javac/ExtraCompilerDiscovery.java) somehow finds the right `ExtraCompiler` implementation (or none at all) to hook in.
+* [FileExt](https://github.com/stephenh/scalagwt-gwt/blob/embed/dev/core/src/com/google/gwt/dev/javac/FileExt.java) class for `.java`/`.scala` path logic
+  * Not sure how to make this language agnostic--`ExtraCompiler.getExtension` maybe, but it only gets instantiated later
+* Most other changes are separate name mangling fix
+* No new dependencies
+* Owned by the GWT team, responsible for keeping the `ExtraCompiler` hook (plus `FileExt`) working
+
+`scala`
+-------
+
+* Compile `factorymanifests.jar` for later use
+* Compile jribble backend (or plugin jar) for later use
+* Added `-Xplugin-classes` option for later loading `factorymanifests.jar` (and potentially `jribblebackend.jar`) without a path
+* Doesn't build `scala-library-jribble` as part of the main build--wait until we can use `CompileModule`
+* No GWT dependencies, but depends on `jribble.jar` (as the jribble backend makes jribble ASTs)
+* Owned by the Scala team, responsible for keeping the `factorymanifests` and jribble backend working
+
+`gwt-scala.jar`
+---------------
+
+This is the primary glue module.
+
+It provides a `JribbleExtraCompiler` that says "hey GWT, give me non-Java units, I'll give you bytecode + GWT ASTs for them", plus a `ScalaNscJribbleCompiler` that says "hey, JribbleExtraCompiler, I can ask scalac for the bytecode + jribble ASTs you need". This lets `JribbleExtraCompiler` be reused by other non-Java languages that can give it bytecode + jribble ASTs for it to massage to GWT ASTs.
+
+* Depends on `gwt-dev.jar`, `jribble.jar`, and `scala-compiler.jar`
+* Has [JribbleExtraCompiler](https://github.com/stephenh/scalagwt-gwt/blob/embed/scala/src/com/google/gwt/dev/scalac/JribbleExtraCompiler.java)
+  * Fairly generic implementation of GWT `ExtraCompiler` for any jribble language
+  * Somehow defaults to the `ScalaNscJribbleCompiler`
+* `ScalaNscJribbleCompiler` calls Scala's nsc
+  * Currently munging `/bin`, `/src` folders in `/tmp`
+  * Ideally, since `JribbleCompiler` is defined up in `jribble.jar`, the Scala project could provide an implementation that was in their repository so:
+    * They maintain it across releases
+    * It could use in-process communication with `nsc`/whatever instead of always hitting `/tmp` like the naive implementation does now
+* `JribbleAstBuilder` for heavy lifting of jribble AST -> GWT AST translation
+* Currently provides both any-jribble-language integration + scala-language integration, could be split up (`gwt-jribble.jar` vs. `gwt-scala.jar`)
+  * Would remove the `scala-compiler.jar` dependency
+* Could live either in the GWT repository or in a ScalaGWT repo.
+  * If owned by ScalaGWT team, we would have to update `JribbleAstBuilder` whenever GWT releases contained breaking changes in the GWT ASTs (probably rare)
+
+`scala-library-jribble.jar`
+---------------------------
+
+While one of the hardest parts of the project so far, `scala-library-jribble` is just "compile the (munged) scala library like you would any other GWT library/application".
+
+The munging (removing reflection/etc.) is very non-trivial, but, once that is done, the compilation part is easy.
+
+* Built from Scala library source by running `ant lib-jribble` in `scalagwt-scala`
+* Produces `ScalaLibrary.gwtar`, which has pre-compiled bytecode + GWT ASTs for faster GWT startup times
+
+Handling GWT/Scala Release Cycles
+=================================
+
+`gwt-scala.jar` would probably have a GWT + Scala combination, e.g. `gwt-scala_2.4_2.9`. Probably. Not sure.
+
+Technically `gwt-scala` does not use any `scala.*` APIs (only jribble (which has some Scala for now) + calling `nsc.Main`), so could probably work across scala releases?
+
+For a GWT release:
+
+* Did `ExtraCompiler` API change? (Unlikely.)
+* Did the GWT ASTs change? (Maybe, not a public API, update `JribbleAstBuilder` if so)
+
+For a Scala release:
+
+* Did scala-library change? (Likely, update IKVM patches.)
+* Did `factorymanifests`/jribble backend API change (Unlikely.)
+
+User Project Configuration
+==========================
+
+Ideally, post-upstream merges, set up a classpath with:
+
+* Stock `scala-compiler.jar`
+* Stock `scala-library.jar`
+* `jribble-backend.jar` plugin
+* `factorymanifests.jar` plugin
+* `scala-library-jribble.jar` for `ScalaLibrary.gwtar`
+* Stock `gwt-dev.jar`
+* `jribble.jar`
 * `gwt-scala.jar`
-  * Depends on `gwt-dev.jar`, `jribble.jar`, and `scala-compiler.jar`
-  * Has `JribbleExtraCompiler`
-    * Fairly generic implementation of GWT `ExtraCompiler` for jribble languages
-    * Somehow defaults to the `ScalaNscJribbleCompiler`
-  * `ScalaNscJribbleCompiler` calls Scala's nsc
-    * Currently munging `/bin`, `/src` folders in `/tmp`
-  * `JribbleAstBuilder` for heavy lifting of jribble AST -> GWT AST translation
 
-* `scala-library-jribble.jar`
-  * `ant lib-jribble` in `scalagwt-scala`
-  * Has `ScalaLibrary.gwtar`
+Tangent
+-------
+
+Interesting thought experiment. What if we need a non-standard scala compiler? E.g. the unreleased virtualized one to handle simpler pattern matching. Could potentially:
+
+* ...everything the same as above...
+* But for `gwt-scala.jar`, also include:
+  * A `scala-compiler.jar` that is whatever compiler we want
+  * A `scala-library.jar` that is whatever library we want
+  * When invoking `ScalaNscJribbleCompiler`, use a multi-parent classloader that uses the embedded compiler/library
+  * Share `jribble.jar` across the multi-parent classloader--all we need back is bytecode + jribble ASTs
+
+The user then can keep using the stock `scala-compiler.jar` on their regular classpath for compilation in the IDE, for client-, test-, and server-side code. But GWT compilation would use the other scala-compiler that may/may not work with the IDE, and may/may not be appropriate for the server-side classes.
+
+This gives us freedom to ship non-standard compiler/library and not get weird looks. As long as the user's real/stock scala-compiler accepts basically the same source as whatever hacked scala-compiler we squirrel away inside of `gwt-scala.jar`, the user should not be able to tell the difference. In theory.
+
+I'm not seriously proposing this; just saying it's an optional if a customized `scala-compiler.jar` becomes inevitable.
+
 
