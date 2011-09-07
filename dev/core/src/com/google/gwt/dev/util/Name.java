@@ -81,6 +81,7 @@ public class Name {
         return name.substring(lastSlash + 1);
       }
 
+      /** @return the internal package name for {@code name} */
       public static String getPackageName(String name) {
         assert isInternalName(name);
         int lastSlash = name.lastIndexOf('/');

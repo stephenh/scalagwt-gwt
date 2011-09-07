@@ -17,6 +17,7 @@ package com.google.gwt.dev.javac;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.dev.javac.typemodel.TypeOracle;
+import com.google.gwt.dev.util.Name;
 import com.google.gwt.dev.util.StringInterner;
 import com.google.gwt.dev.util.collect.HashMap;
 import com.google.gwt.dev.util.collect.Lists;
@@ -69,18 +70,22 @@ public class Dependencies implements Serializable {
    * if someone introduces "foo.bar.String", as the import precedence changes.
    *
    * {@code myPackage} and {@code apiRefs} should already be interned.
+   *
+   * @param myPackage internal name of the package, e.g. {@code foo/bar} for {@code foo.bar.Zaz}
+   * @param apiRefs internal name references of the class, e.g. {@code foo/bar/Zaz}
    */
   public static Dependencies buildFromApiRefs(String myPackage, List<String> apiRefs) {
     List<String> simpleRefs = new ArrayList<String>();
     List<String> qualifiedRefs = new ArrayList<String>();
     for (String apiRef : apiRefs) {
+      assert Name.isInternalName(apiRef);
       int i = 0;
-      while ((i = apiRef.indexOf('.', i + 1)) > -1) {
+      while ((i = apiRef.indexOf('/', i + 1)) > -1) {
         qualifiedRefs.add(interner.intern(apiRef.substring(0, i)));
       }
       qualifiedRefs.add(apiRef);
-      if (apiRef.startsWith("java.lang.")) {
-        simpleRefs.add(interner.intern(apiRef.substring("java.lang.".length())));
+      if (apiRef.startsWith("java/lang/")) {
+        simpleRefs.add(interner.intern(apiRef.substring("java/lang/".length())));
       }
     }
     return new Dependencies(myPackage, qualifiedRefs, simpleRefs, apiRefs);
@@ -103,9 +108,11 @@ public class Dependencies implements Serializable {
    */
   Dependencies(String myPackage, List<String> unresolvedQualified, List<String> unresolvedSimple,
       List<String> apiRefs) {
+    assert Name.isInternalName(myPackage);
     this.myPackage =
-        StringInterner.get().intern((myPackage.length() == 0) ? "" : (myPackage + '.'));
+        StringInterner.get().intern((myPackage.length() == 0) ? "" : (myPackage + '/'));
     for (String qualifiedRef : unresolvedQualified) {
+      assert Name.isInternalName(qualifiedRef);
       qualified.put(qualifiedRef, null);
     }
     for (String simpleRef : unresolvedSimple) {
@@ -185,7 +192,7 @@ public class Dependencies implements Serializable {
     if (cc != null) {
       return cc;
     }
-    return allValidClasses.get("java.lang." + ref);
+    return allValidClasses.get("java/lang/" + ref);
   }
 
   /**
