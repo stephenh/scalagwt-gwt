@@ -97,7 +97,8 @@ public class CompilationStateBuilder {
           MethodArgNamesLookup methodArgs = MethodParamCollector.collect(cud);
 
           StringInterner interner = StringInterner.get();
-          String packageName = interner.intern(Shared.getPackageName(builder.getTypeName()));
+          String packageName = interner.intern(Shared.getPackageName(builder.getTypeName()
+              .replace('.', '/')));
           List<String> unresolvedQualified = new ArrayList<String>();
           List<String> unresolvedSimple = new ArrayList<String>();
           for (char[] simpleRef : cud.compilationResult().simpleNameReferences) {
