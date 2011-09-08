@@ -107,9 +107,16 @@ public class CompilationStateBuilder {
             unresolvedSimple.add(interner.intern(String.valueOf(simpleRef)));
           }
           for (char[][] qualifiedRef : cud.compilationResult().qualifiedReferences) {
-            // TODO(stephenh) Kill crappy source -> internal conversion
-            // https://github.com/scalagwt/scalagwt-gwt/issues/1
-            unresolvedQualified.add(interner.intern(CharOperation.toString(qualifiedRef).replace('.', '/')));
+            ReferenceBinding binding = compiler.resolveType(qualifiedRef);
+            final String internalName;
+            if (binding != null) {
+              // the compiler successfully found the type by source name
+              internalName = new String(CharOperation.concatWith(binding.compoundName, '/'));
+            } else {
+              // it failed (which happens on all packages). fall back to name mangling.
+              internalName = new String(CharOperation.concatWith(qualifiedRef, '/'));
+            }
+            unresolvedQualified.add(interner.intern(internalName));
           }
           for (String jsniDep : jsniDeps) {
             unresolvedQualified.add(interner.intern(jsniDep));

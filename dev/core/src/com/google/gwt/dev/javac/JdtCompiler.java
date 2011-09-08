@@ -461,6 +461,20 @@ public class JdtCompiler {
     return null;
   }
 
+  /** Looks for inner classes in {@code binding} that are named {@code qualifiedSourceName} */
+  private static ReferenceBinding findRecursive(ReferenceBinding binding, char[] qualifiedSourceName) {
+    for (ReferenceBinding member : binding.memberTypes()) {
+      if (CharOperation.equals(member.qualifiedSourceName(), qualifiedSourceName)) {
+        return member;
+      }
+      ReferenceBinding found = findRecursive(member, qualifiedSourceName);
+      if (found != null) {
+        return found;
+      }
+    }
+    return null;
+  }
+
   /**
    * Returns <code>true</code> if this is a local type, or if this type is
    * nested inside of any local type.
@@ -719,6 +733,26 @@ public class JdtCompiler {
 
   public ReferenceBinding resolveType(String sourceOrBinaryName) {
     return resolveType(compilerImpl.lookupEnvironment, sourceOrBinaryName);
+  }
+
+  public ReferenceBinding resolveType(char[][] sourceName) {
+    // if sourceName is a package, this is all for naught
+    for (int i = sourceName.length; i > 0; i--) {
+      char[][] sub = CharOperation.subarray(sourceName, 0, i);
+      ReferenceBinding binding = compilerImpl.lookupEnvironment.getType(sub);
+      if (binding != null) {
+        // found the type, is this the first try, and so a top-level type?
+        if (i == sourceName.length) {
+          return binding;
+        } else {
+          // no, sourceName is an inner class, resolve so we can find it
+          char[] qualifiedSourceName = CharOperation.concatWith(CharOperation.subarray(
+              sourceName, i - 1, sourceName.length), '.');
+          return findRecursive(binding, qualifiedSourceName);
+        }
+      }
+    }
+    return null;
   }
 
   public void setAdditionalTypeProviderDelegate(AdditionalTypeProviderDelegate newDelegate) {
