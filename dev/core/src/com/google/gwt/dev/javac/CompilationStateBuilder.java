@@ -24,6 +24,7 @@ import com.google.gwt.dev.jjs.impl.GwtAstBuilder;
 import com.google.gwt.dev.js.ast.JsRootScope;
 import com.google.gwt.dev.resource.Resource;
 import com.google.gwt.dev.util.StringInterner;
+import com.google.gwt.dev.util.Name.BinaryName;
 import com.google.gwt.dev.util.log.speedtracer.CompilerEventType;
 import com.google.gwt.dev.util.log.speedtracer.DevModeEventType;
 import com.google.gwt.dev.util.log.speedtracer.SpeedTracerLogger;
@@ -80,10 +81,11 @@ public class CompilationStateBuilder {
           Map<String, Binding> jsniRefs = new HashMap<String, Binding>();
           JsniChecker.check(cud, jsoState, jsniMethods, jsniRefs, new JsniChecker.TypeResolver() {
             @Override
-            public ReferenceBinding resolveType(String typeName) {
-              ReferenceBinding resolveType = compiler.resolveType(typeName);
+            public ReferenceBinding resolveType(String sourceOrBinaryName) {
+              ReferenceBinding resolveType = compiler.resolveType(sourceOrBinaryName);
               if (resolveType != null) {
-                jsniDeps.add(String.valueOf(resolveType.qualifiedSourceName()));
+                String binaryName = CharOperation.toString(resolveType.compoundName);
+                jsniDeps.add(BinaryName.toInternalName(binaryName));
               }
               return resolveType;
             }
