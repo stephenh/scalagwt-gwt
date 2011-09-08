@@ -462,12 +462,12 @@ public class JdtCompiler {
   }
 
   /** Looks for inner classes in {@code binding} that are named {@code qualifiedSourceName} */
-  private static ReferenceBinding findRecursive(ReferenceBinding binding, char[] qualifiedSourceName) {
+  private static ReferenceBinding findInnerClass(ReferenceBinding binding, char[] qualifiedSourceName) {
     for (ReferenceBinding member : binding.memberTypes()) {
       if (CharOperation.equals(member.qualifiedSourceName(), qualifiedSourceName)) {
         return member;
       }
-      ReferenceBinding found = findRecursive(member, qualifiedSourceName);
+      ReferenceBinding found = findInnerClass(member, qualifiedSourceName);
       if (found != null) {
         return found;
       }
@@ -735,8 +735,14 @@ public class JdtCompiler {
     return resolveType(compilerImpl.lookupEnvironment, sourceOrBinaryName);
   }
 
+  /** @return the {@link ReferenceBinding} for {@code sourceName} or {@code null} if not found. */
   public ReferenceBinding resolveType(char[][] sourceName) {
-    // if sourceName is a package, this is all for naught
+    // If sourceName is a package, this is all for naught. It would be
+    // nice to have a way to ask compilerImpl if sourceName is a package
+    // and skip the loop.
+    // Try foo.Bar.Zaz, then foo.Bar, then foo, looking for the top-level type
+    // (lookupEnvironment.getType only works with [foo, Bar$Zaz], and we initially
+    // don't know where in sourceName [foo, Bar, Zaz] the inner class begins.)
     for (int i = sourceName.length; i > 0; i--) {
       char[][] sub = CharOperation.subarray(sourceName, 0, i);
       ReferenceBinding binding = compilerImpl.lookupEnvironment.getType(sub);
@@ -745,10 +751,11 @@ public class JdtCompiler {
         if (i == sourceName.length) {
           return binding;
         } else {
-          // no, sourceName is an inner class, resolve so we can find it
+          // no, sourceName is an inner class, so ask the top level type for it.
+          // qualifiedSourceNames in ecj are "Bar.Zaz" for the type "foo.Bar.Zaz"
           char[] qualifiedSourceName = CharOperation.concatWith(CharOperation.subarray(
               sourceName, i - 1, sourceName.length), '.');
-          return findRecursive(binding, qualifiedSourceName);
+          return findInnerClass(binding, qualifiedSourceName);
         }
       }
     }
