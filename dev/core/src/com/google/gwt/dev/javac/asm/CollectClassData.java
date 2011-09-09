@@ -214,7 +214,7 @@ public class CollectClassData extends EmptyVisitor {
   }
 
   /**
-   * @return the simple name
+   * @return the non-nested simple name (e.g. {@code Zaz} for {@code foo.Bar.Zaz}
    */
   public String getSimpleName() {
     if (innerClass != null) {

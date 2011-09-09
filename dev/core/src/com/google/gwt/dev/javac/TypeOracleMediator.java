@@ -270,6 +270,20 @@ public class TypeOracleMediator extends TypeOracleBuilder {
     return NO_TYPE_PARAMETERS;
   }
 
+  /** @return {@code Bar.Zaz} if {@code classData} is {@code foo.Bar.Zaz} */
+  private static String getNestedName(TypeOracleBuildContext context, CollectClassData classData) {
+    if (classData == null) {
+      return null;
+    }
+    // does classData itself have an outer class?
+    if (classData.getOuterClass() != null) {
+      String outerName = getNestedName(context,
+          context.classMap.get(classData.getOuterClass()));
+      return outerName + "." + classData.getSimpleName();
+    }
+    return classData.getSimpleName();
+  }
+
   private static JTypeParameter[] getTypeParametersForClass(
       CollectClassData classData) {
     JTypeParameter[] typeParams = null;
@@ -499,7 +513,7 @@ public class TypeOracleMediator extends TypeOracleBuilder {
     return AnnotationProxyFactory.create(annotationClass, values);
   }
 
-  private JRealClassType createType(TypeData typeData,
+  private JRealClassType createType(TypeOracleBuildContext context, TypeData typeData,
       CollectClassData collectClassData, CollectClassData enclosingClassData) {
     int access = collectClassData.getAccess();
     String simpleName = collectClassData.getSimpleName();
@@ -508,10 +522,7 @@ public class TypeOracleMediator extends TypeOracleBuilder {
     JPackage pkg = typeOracle.getOrCreatePackage(jpkgName);
     boolean isIntf = (access & Opcodes.ACC_INTERFACE) != 0;
     assert !collectClassData.hasNoExternalName();
-    String enclosingTypeName = null;
-    if (enclosingClassData != null) {
-      enclosingTypeName = enclosingClassData.getSimpleName();
-    }
+    String enclosingTypeName = getNestedName(context, enclosingClassData);
     if ((access & Opcodes.ACC_ANNOTATION) != 0) {
       resultType = newAnnotationType(pkg, enclosingTypeName, simpleName);
     } else if ((access & Opcodes.ACC_ENUM) != 0) {
@@ -558,7 +569,7 @@ public class TypeOracleMediator extends TypeOracleBuilder {
         return null;
       }
     }
-    JRealClassType realClassType = createType(typeData, collectClassData,
+    JRealClassType realClassType = createType(context, typeData, collectClassData,
         enclosingClassData);
     unresolvedTypes.add(realClassType);
     return realClassType;

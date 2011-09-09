@@ -99,6 +99,7 @@ public class CompilationStateBuilder {
           MethodArgNamesLookup methodArgs = MethodParamCollector.collect(cud);
 
           StringInterner interner = StringInterner.get();
+          // Assumes getTypeName is a top-level type, which is okay
           String packageName = interner.intern(Shared.getPackageName(builder.getTypeName()
               .replace('.', '/')));
           List<String> unresolvedQualified = new ArrayList<String>();
