@@ -255,7 +255,7 @@ public class CompilationStateBuilder {
           
           JribbleLoader jribbleLoader = new JribbleLoader(Thread
               .currentThread().getContextClassLoader(), buildQueue);
-          jribbleLoader.load(jribbleBuilders);
+          jribbleLoader.load(allValidClasses, jribbleBuilders);
         } finally {
           jdtCompilerEvent.end();
         }

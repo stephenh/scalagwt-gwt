@@ -34,6 +34,13 @@ public class NameTest extends TestCase {
   }
 
   public void testBinaryName() {
+      assertEquals(
+    		  "scala.collection.immutable.$colon.colon$",
+    		  InternalName.toSourceName("scala/collection/immutable/$colon$colon$"));
+      assertEquals(
+    		  "scala.collection.immutable.$colon.colon$",
+    		  BinaryName.toSourceName("scala.collection.immutable.$colon$colon$"));
+      
     assertEquals("org.test.Foo", BinaryName.toSourceName("org.test.Foo"));
     assertEquals("org.test.Foo.Bar",
         BinaryName.toSourceName("org.test.Foo$Bar"));

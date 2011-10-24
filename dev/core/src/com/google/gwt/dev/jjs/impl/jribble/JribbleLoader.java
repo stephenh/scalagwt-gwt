@@ -37,8 +37,8 @@ public class JribbleLoader {
    * Load the class files and ASTs for the given builders. Submits the builders
    * to the build queue as they are completed.
    */
-  public void load(Collection<? extends CompilationUnitBuilder> builders) {
-    loadCompiledClasses(builders);
+  public void load(Map<String, CompiledClass> allValidClasses, Collection<? extends CompilationUnitBuilder> builders) {
+    loadCompiledClasses(allValidClasses, builders);
     loadAsts(builders);
   }
 
@@ -73,7 +73,7 @@ public class JribbleLoader {
     }
   }
 
-  private void loadCompiledClasses(Collection<? extends CompilationUnitBuilder> builders) {
+  private void loadCompiledClasses(Map<String, CompiledClass> allValidClasses, Collection<? extends CompilationUnitBuilder> builders) {
     Map<String, CompiledClass> compiledClasses = new HashMap<String, CompiledClass>();
     Map<String, String> enclosingClasses = new HashMap<String, String>();
 
@@ -95,6 +95,11 @@ public class JribbleLoader {
         enclosingClasses.put(internalName, compiledClass.getTypeData()
             .getOuterClass());
       }
+
+      if (internalName.contains("colon$colon")) {
+    	System.out.println("Putting " + internalName + " in as " + compiledClass.getSourceName());
+      }
+      allValidClasses.put(compiledClass.getSourceName(), compiledClass);
     }
 
     // Patch up enclosing classes

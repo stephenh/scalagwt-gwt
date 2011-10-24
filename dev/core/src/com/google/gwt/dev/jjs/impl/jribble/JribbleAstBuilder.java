@@ -172,7 +172,7 @@ public class JribbleAstBuilder {
       createMembers(declaredType);
       // Fill in the methods
       buildTheCode(declaredType);
-      return new Result(newTypes, mapper.getTouchedTypes(), methodArgNames);
+      return new Result(newTypes, binaryNamesToSourceNames(mapper.getTouchedTypes()), methodArgNames);
     } finally {
       // Clean up.
       mapper.clearSource();
@@ -1008,4 +1008,11 @@ public class JribbleAstBuilder {
       return AccessModifier.DEFAULT;
   }
 
+  private static Set<String> binaryNamesToSourceNames(Set<String> binaryNames) {
+    Set<String> sourceNames = new HashSet<String>(binaryNames.size());
+    for (String binaryName : binaryNames) {
+      sourceNames.add(intern(BinaryName.toSourceName(binaryName)));
+    }
+    return sourceNames;
+  }
 }
