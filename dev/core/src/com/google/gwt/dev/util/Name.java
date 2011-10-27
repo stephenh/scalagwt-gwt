@@ -89,7 +89,7 @@ public class Name {
     public static String toSourceName(String binaryName) {
       assert isBinaryName(binaryName);
       // don't change a trailing $ to a .
-      return NON_TRAILING_DOLLAR.matcher(binaryName).replaceAll(".$1");
+      return NON_TRAILING_DOLLAR.matcher(binaryName).replaceAll(".");
     }
     
     private BinaryName() {
@@ -169,7 +169,7 @@ public class Name {
       public static String toSourceName(String internalName) {
         assert isInternalName(internalName);
         // don't change a trailing $ or slash to a .
-        return NON_TRAILING_DOLLAR_SLASH.matcher(internalName).replaceAll(".$1");
+        return NON_TRAILING_DOLLAR_SLASH.matcher(internalName).replaceAll(".");
       }
   
       private InternalName() {
@@ -221,17 +221,17 @@ public static class SourceName {
 
     public static String toSourceName(String dottedName) {
       // don't change a trailing $ to a .
-      return NON_TRAILING_DOLLAR.matcher(dottedName).replaceAll(".$1");
+      return NON_TRAILING_DOLLAR.matcher(dottedName).replaceAll(".");
     }
   }
 
   // Non-trailing $
   private static final Pattern NON_TRAILING_DOLLAR =
-    Pattern.compile("[$](\\p{javaJavaIdentifierStart})");
+    Pattern.compile("[$](?!$)");
 
   // Non-trailing $ or /
   private static final Pattern NON_TRAILING_DOLLAR_SLASH =
-    Pattern.compile("[$/](\\p{javaJavaIdentifierStart})");
+    Pattern.compile("[$/](?!$)");
 
   /**
    * Get the binary name for a Java class.
